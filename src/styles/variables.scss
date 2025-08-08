@@ -1,0 +1,62 @@
+:root {
+  --sideBarWidth: 220px;
+  --minWidthAppMain:100%;
+}
+
+// 导航栏的设置
+$navbarHeight: 60px; //头部导航栏的高度
+//$navbarBackground: #424F56;  // 导航条背景色
+//$navbarBackground: #FF8400;  // 导航条背景色
+$navbarBackground: #2F4056;  // 导航条背景色
+// 此处定义了一些主题基础颜色
+// base color
+$blue:#1890FF;
+$light-blue:#3A71A8;
+$red:#F56C6C;
+$pink: #E65D6E;
+$green: #30B08F;
+$tiffany: #4AB7BD;
+$yellow:#FEC171;
+$panGreen: #30B08F;
+
+// sidebar
+$menuText:#bfcbd9;
+$menuActiveText:#ffffff;
+$subMenuActiveText:#ffffff; // https://github.com/ElemeFE/element/issues/12951
+$subMenuActiveBg: #1890FF;  // 左侧菜单选中的背景色
+$subMenuActiveColor: #ffffff;  // 左侧菜单选中的字体颜色
+
+//$menuBg:#424F56;  // 左侧菜单导航背景色
+//$menuBg:#212129;  // 左侧菜单导航背景色
+$menuBg:#2F4056;  // 左侧菜单导航背景色
+$menuHover:#263445;
+
+$subMenuBg:#263445;
+$subMenuHover:#2F4056;
+
+$sideBarWidth: var(--sideBarWidth);
+$minWidthAppMain: var(--minWidthAppMain);
+
+//定义一些表头，弹出框的头部背景色
+$titleBg:#FAFAFA;
+$tableRowHeight: 40px;
+
+$commonFontSize: 14px;
+$commonColor: #2A3237;
+$commonColor2: #606266;
+
+// the :export directive is the magic sauce for webpack
+// https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
+:export {
+  menuText: $menuText;
+  menuActiveText: $menuActiveText;
+  subMenuActiveText: $subMenuActiveText;
+  menuBg: $menuBg;
+  menuHover: $menuHover;
+  subMenuBg: $subMenuBg;
+  subMenuHover: $subMenuHover;
+  sideBarWidth: $sideBarWidth;
+  subMenuActiveBg: $subMenuActiveBg;
+  subMenuActiveColor: $subMenuActiveColor;
+  commonFontSize: $commonFontSize;
+}

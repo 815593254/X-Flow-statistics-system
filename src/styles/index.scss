@@ -1,0 +1,457 @@
+// 全局CSS
+
+@import './variables.scss';
+@import './mixin.scss';
+@import './element-ui.scss';
+@import './sidebar.scss';
+
+body {
+  height: 100%;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-family: Microsoft YaHei, Arial, sans-serif,Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB;
+  //overflow: hidden;
+}
+
+label {
+  font-weight: 700;
+}
+
+html {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+#app {
+  height: 100%;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+.no-padding {
+  padding: 0px !important;
+}
+
+.padding-content {
+  padding: 4px 0;
+}
+
+a:focus,
+a:active {
+  outline: none;
+}
+
+a,
+a:focus,
+a:hover {
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+}
+
+div:focus {
+  outline: none;
+}
+
+.fr {
+  float: right;
+}
+
+.fl {
+  float: left;
+}
+
+.pr-5 {
+  padding-right: 5px;
+}
+
+.pl-5 {
+  padding-left: 5px;
+}
+
+.block {
+  display: block;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.inlineBlock {
+  display: block;
+}
+
+.clearfix {
+  &:after {
+    visibility: hidden;
+    display: block;
+    font-size: 0;
+    content: " ";
+    clear: both;
+    height: 0;
+  }
+}
+
+aside {
+  background: #eef1f6;
+  padding: 8px 24px;
+  margin-bottom: 20px;
+  border-radius: 2px;
+  display: block;
+  line-height: 32px;
+  font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  color: #2c3e50;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  a {
+    color: #337ab7;
+    cursor: pointer;
+
+    &:hover {
+      color: rgb(32, 160, 255);
+    }
+  }
+}
+
+//main-container全局样式
+.app-container {
+  padding: 20px;
+}
+
+.pagination-container {
+  margin-top: 30px;
+}
+
+.text-center {
+  text-align: center
+}
+
+.sub-navbar {
+  height: 45px;
+  line-height: 45px;
+  position: relative;
+  width: 100%;
+  text-align: right;
+  padding-right: 20px;
+  transition: 600ms ease position;
+  background: linear-gradient(90deg, rgba(32, 182, 249, 1) 0%, rgba(32, 182, 249, 1) 0%, rgba(33, 120, 241, 1) 100%, rgba(33, 120, 241, 1) 100%);
+
+  .subtitle {
+    font-size: 20px;
+    color: #fff;
+  }
+
+  &.draft {
+    background: #d0d0d0;
+  }
+
+  &.deleted {
+    background: #d0d0d0;
+  }
+}
+
+.link-type,
+.link-type:focus {
+  color: #337ab7;
+  cursor: pointer;
+
+  &:hover {
+    color: rgb(32, 160, 255);
+  }
+}
+
+.filter-container {
+  padding-bottom: 10px;
+
+  .filter-item {
+    display: inline-block;
+    vertical-align: middle;
+    margin-bottom: 10px;
+  }
+}
+
+//refine vue-multiselect plugin
+.multiselect {
+  line-height: 16px;
+}
+
+.multiselect--active {
+  z-index: 1000 !important;
+}
+
+
+.permission-tip-btn{
+  text-align: center;
+}
+
+.tip-icon{
+  text-align: center;
+}
+
+
+// 去掉默认样式
+p {
+  display: block;
+  margin-block-start: 0px;
+  margin-block-end: 0px;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+}
+// 主界面灰色边框以及白色背景
+.tab_main_content{
+  margin: 60px 20px 20px 20px;
+  background-color: #ffffff;
+  -webkit-box-flex: 1;
+  -ms-flex-positive: 1;
+  flex-grow: 1;
+}
+// 子页面中表格上面搜索框和新增，导入，删除，刷新按钮
+.table_form_content{
+  font-size: $commonFontSize;
+  .left-form{
+    width: calc(100% - 120px);
+    .el-form--inline .el-form-item{
+      margin-bottom: 10px;
+    }
+    .el-input{
+      width: 150px;
+    }
+    .el-icon-search{
+      //position: absolute;
+      //right: 5px;
+      //top: 11px;
+      cursor: pointer;
+      font-size: 18px !important;
+      color: $blue;
+    }
+    .el-form-item--medium .el-form-item__label{
+      white-space: nowrap !important;
+      padding-right: 5px;
+    }
+    //margin-bottom: 20px;
+  }
+  .right-form{
+    width: 120px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: right;
+    align-items: center;
+    height: 36px;
+    line-height: 36px;
+    .icon-button{
+      outline: none;
+      cursor: pointer;
+      margin-left: 5px;
+      font-size: 20px;
+      color: $commonColor2;
+      font-weight: 500;
+    }
+    .delete-button{
+      color: $red;
+    }
+    .refresh-button{
+      color: $blue;
+    }
+  }
+}
+// 新增编辑表单内容
+.add_form_content{
+  padding: 50px;
+  label{
+    font-weight: 400;
+  }
+  .input-with-select .el-input-group__prepend {
+    background-color: #fff;
+  }
+}
+// 数据表格的最后一栏的操作按钮
+.table-button{
+  .icon-button{
+    margin-right: 10px;
+  }
+  .icon-button:last-of-type{
+    margin-right: 0px !important;
+  }
+}
+
+// 重置表格的tooltips的样式
+.el-tooltip__popper.is-lights{
+  background-color: #f0f9eb;
+  color: #67c23a;
+  max-width: 90%;
+  margin-right: 15px;
+
+  /* 溢出的内容将它隐藏 */
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  overflow : hidden;
+  -webkit-line-clamp: 25;
+  -webkit-box-orient: vertical;
+}
+.el-tooltip__popper.is-lights[x-placement^=top] .popper__arrow{
+  border-top-color: #f0f9eb;
+}
+.el-tooltip__popper.is-lights[x-placement^=bottom] .popper__arrow{
+  border-bottom-color: #f0f9eb;
+}
+.el-tooltip__popper.is-lights[x-placement^=top] .popper__arrow:after {
+  border-top-color: #f0f9eb;
+  content: '';
+}
+.el-tooltip__popper.is-lights[x-placement^=bottom] .popper__arrow:after {
+  border-bottom-color: #f0f9eb;
+  content: '';
+}
+// 数据表格分页
+.pagination-content{
+  margin-top: 15px;
+  text-align: right;
+  .el-pagination{
+    padding: 2px 0px;
+  }
+  .el-pagination span:not([class*=suffix]), .el-pagination button{
+    font-size: $commonFontSize !important;
+  }
+}
+
+@media screen and (max-width: 980px) {
+  .form-content {
+    flex-wrap: wrap;
+    .right-form{
+      text-align: left;
+    }
+  }
+}
+.el-form--label-rigth .el-form-item__label{
+  text-align: right !important;
+}
+.el-dialog__header{
+  background-color: $titleBg;
+}
+
+.zZindex{z-index: 3000 !important;}
+.host-table .el-table--border.el-loading-parent--relative {
+     border-color: #dfe6ec;
+}
+.host-table .el-loading-mask{
+  width: 200px;
+  height: 40px;
+  left: 40%;
+  top: 50px;
+}
+
+//级别管理的标签颜色
+.level_label_color{
+  position: relative;
+  top: 5px;
+  span{
+    display: inline-block;
+    width: 100%;
+    height: 25px;
+  }
+  .first_level{
+    background-color: #00CC00;
+  }
+  .second_level{
+    background-color: #669900;
+  }
+  .third_level{
+    background-color: #66CCCC;
+  }
+  .fourth_level{
+    background-color: #FFCC99;
+  }
+  .fifth_level{
+    background-color: #FF0000;
+  }
+}
+.level_label_color.data_level{
+  span{
+    height: 30px !important;
+    line-height: 25px;
+    color: #ffffff;
+    text-align: center;
+  }
+}
+.connection_status:before{
+  content: '';
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  margin-right: 8px;
+  border-radius: 50%;
+  border: 1px solid #bcbcbc;
+  box-shadow: 0 2px 4px 0 rgba(0,0,0,0.50);
+  background-color: #00CC00;
+}
+
+// 数据表格的内容展开样式
+.el-table__expand-icon:after{
+  content: '';
+  color: #1890ff;
+  cursor: pointer;
+}
+.el-table__expand-icon.el-table__expand-icon--expanded:after{
+  content: ''!important;
+  color: #1890ff;
+  cursor: pointer;
+}
+.el-table__expand-icon--expanded{
+  -webkit-transform: rotate(0deg)!important;
+  transform: rotate(0deg)!important;
+}
+.el-table__expand-icon{
+  & > i{
+    display: none !important;
+  }
+}
+
+// 表格中的tabs样式
+.table_tab{
+  margin: 0 15px 10px 15px;
+  .el-tabs__nav-wrap::after{
+    height: 0.5px !important;
+  }
+  .reset_el_col{
+    border: 1px solid #dfe6ec;
+    height: 240px;
+  }
+  .device_info{
+    width: 100%;
+    height: 240px;
+  }
+  .el-table th.el-table__cell{
+    background-color: #1890ff;
+    color: #ffffff;
+  }
+  .el-table thead .cell{
+    color: #ffffff !important;
+  }
+  .el-table__row,.el-table th{
+    height: 35px !important;
+  }
+}
+
+.add_form_data{
+  width: 100%;
+  padding-right: 20px;
+  .el-color-picker--medium{
+    width: 100% !important;
+    .el-color-picker__trigger{
+      width: 100% !important;
+    }
+  }
+  .el-select{
+    width: 100% !important;
+  }
+}
+.search_form_data{
+
+}
