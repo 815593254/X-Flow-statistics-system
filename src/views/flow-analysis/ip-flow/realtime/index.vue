@@ -9,7 +9,7 @@
                 </el-col>
                 <el-col :span="6">
                     <div>
-                        <el-button type="primary" @click="handleQuery">筛选</el-button>
+                        <el-button type="primary" @click="handleQuery">查询</el-button>
                         <el-button @click="resetQuery">重置</el-button>
                     </div>
                 </el-col>
@@ -216,7 +216,7 @@ export default {
         async loadInitialData() {
             // 如果没有输入IP地址，不进行查询
             if (!this.queryParams.ip) {
-                // this.$message.warning('请输入IP地址进行查询')
+                this.$message.warning('请输入IP地址进行查询')
                 return
             }
 
@@ -306,7 +306,7 @@ export default {
             this.stopAutoUpdate() // 先清理已有的定时器
             this.timer = setInterval(() => {
                 this.loadInitialData()
-            }, 1) // 每秒更新一次
+            }, 1000) // 每秒更新一次
         },
 
         // 停止自动更新

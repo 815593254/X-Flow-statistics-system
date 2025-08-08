@@ -1,240 +1,442 @@
 <template>
   <div class="ip-history-flow-container">
-    <div class="filter-container">
-      <el-form :inline="true" :model="queryParams" class="demo-form-inline">
-        <el-form-item label="时间范围">
-          <el-date-picker
-            v-model="queryParams.dateRange"
-            type="datetimerange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            format="yyyy-MM-dd HH:mm:ss"
-            value-format="yyyy-MM-dd HH:mm:ss"
-          />
-        </el-form-item>
-        <el-form-item label="IP地址">
-          <el-input v-model="queryParams.ipAddress" placeholder="请输入IP地址" clearable />
-        </el-form-item>
-        <el-form-item label="地区">
-          <el-select v-model="queryParams.region" placeholder="请选择地区" clearable>
-            <el-option label="北京" value="beijing" />
-            <el-option label="上海" value="shanghai" />
-            <el-option label="广东" value="guangdong" />
-            <el-option label="其他" value="other" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleQuery">查询</el-button>
-          <el-button @click="resetQuery">重置</el-button>
-          <el-button type="success" @click="exportData">导出</el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-
-    <div class="statistics-container">
+    <el-card style="margin-top: 10px;">
       <el-row :gutter="20">
-        <el-col :span="6">
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.uniqueIps }}</div>
-            <div class="stat-label">独立IP数</div>
-          </div>
+        <el-col :span="8">
+          <el-date-picker v-model="queryParams.dateRange" type="datetimerange" range-separator="至"
+            start-placeholder="开始日期" end-placeholder="结束日期" format="yyyy-MM-dd HH:mm:ss"
+            value-format="yyyy-MM-dd HH:mm:ss" :picker-options="pickerOptions" />
         </el-col>
+
         <el-col :span="6">
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.totalRequests }}</div>
-            <div class="stat-label">总访问量</div>
-          </div>
+          <el-input v-model="queryParams.ip" placeholder="请输入IP地址" clearable />
         </el-col>
-        <el-col :span="6">
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.riskIps }}</div>
-            <div class="stat-label">风险IP数</div>
-          </div>
-        </el-col>
-        <el-col :span="6">
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.blockedIps }}</div>
-            <div class="stat-label">已拉黑IP数</div>
+
+        <el-col :span="4">
+          <div>
+            <el-button type="primary" @click="handleQuery">查询</el-button>
+            <el-button @click="resetQuery">重置</el-button>
           </div>
         </el-col>
       </el-row>
-    </div>
+    </el-card>
 
-    <div class="charts-container">
+    <el-card style="margin-top: 10px;">
       <el-row :gutter="20">
-        <el-col :span="12">
-          <div class="chart-wrapper">
-            <div class="chart-title">IP访问趋势</div>
-            <div id="ipTrendChart" style="width: 100%; height: 350px;"></div>
-          </div>
+        <el-col :span="6">
+          <el-card>
+            <div class="stat-card">
+              <div class="stat-value">{{ formatBytes(statistics.avgRateBps) }}</div>
+              <div class="stat-label">平均流量 (bps)</div>
+            </div>
+          </el-card>
         </el-col>
-        <el-col :span="12">
+        <el-col :span="6">
+          <el-card>
+            <div class="stat-card">
+              <div class="stat-value">{{ formatBytes(statistics.peakRateBps) }}</div>
+              <div class="stat-label">峰值流量 (bps)</div>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card>
+            <div class="stat-card">
+              <div class="stat-value">{{ formatBytes(statistics.avgAvgBps) }}</div>
+              <div class="stat-label">平均流量均值 (bps)</div>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card>
+            <div class="stat-card">
+              <div class="stat-value">{{ formatBytes(statistics.peakMaxBps) }}</div>
+              <div class="stat-label">峰值最大流量 (bps)</div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </el-card>
+
+    <el-card style="margin-top: 10px;">
+      <el-row :gutter="20">
+        <el-col :span="24">
           <div class="chart-wrapper">
-            <div class="chart-title">地区访问分布</div>
-            <div id="regionDistributionChart" style="width: 100%; height: 350px;"></div>
+            <div class="chart-title">IP流量历史趋势</div>
+            <div id="ipHistoryChart" style="width: 100%; height: 400px;"></div>
           </div>
         </el-col>
       </el-row>
-    </div>
-
-    <div class="table-container">
-      <el-table
-        v-loading="loading"
-        :data="tableData"
-        style="width: 100%"
-        :default-sort="{prop: 'accessTime', order: 'descending'}"
-      >
-        <el-table-column prop="accessTime" label="访问时间" width="180" sortable />
-        <el-table-column prop="ipAddress" label="IP地址" width="150" />
-        <el-table-column prop="requestCount" label="请求次数" width="120" sortable />
-        <el-table-column prop="region" label="地区" width="120" />
-        <el-table-column prop="city" label="城市" width="100" />
-        <el-table-column prop="isp" label="运营商" width="120" />
-        <el-table-column prop="userAgent" label="用户代理" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="totalFlow" label="总流量" width="120" sortable />
-        <el-table-column prop="riskLevel" label="风险等级" width="100">
-          <template slot-scope="scope">
-            <el-tag 
-              :type="getRiskLevelType(scope.row.riskLevel)"
-              size="small"
-            >
-              {{ getRiskLevelText(scope.row.riskLevel) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <pagination
-        v-show="total > 0"
-        :total="total"
-        :page.sync="queryParams.pageNum"
-        :limit.sync="queryParams.pageSize"
-        @pagination="getList"
-      />
-    </div>
+    </el-card>
   </div>
 </template>
 
 <script>
+import { getIpFlowApi } from '@/api/flow-analysis/ip-flow'
+
 export default {
   name: 'IpFlowHistory',
   data() {
     return {
       loading: false,
-      total: 0,
+      chart: null,
       queryParams: {
-        pageNum: 1,
-        pageSize: 10,
-        ipAddress: '',
-        region: '',
+        ip: '',
         dateRange: []
       },
-      statistics: {
-        uniqueIps: 2580,
-        totalRequests: 125684,
-        riskIps: 45,
-        blockedIps: 12
-      },
-      tableData: [
-        {
-          accessTime: '2025-08-07 14:30:25',
-          ipAddress: '192.168.1.100',
-          requestCount: 15,
-          region: '北京',
-          city: '北京',
-          isp: '电信',
-          userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          totalFlow: '2.5MB',
-          riskLevel: 'normal'
-        },
-        {
-          accessTime: '2025-08-07 14:30:20',
-          ipAddress: '203.125.45.67',
-          requestCount: 8,
-          region: '上海',
-          city: '上海',
-          isp: '联通',
-          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-          totalFlow: '1.8MB',
-          riskLevel: 'low'
-        },
-        {
-          accessTime: '2025-08-07 14:29:45',
-          ipAddress: '45.123.67.89',
-          requestCount: 156,
-          region: '美国',
-          city: '纽约',
-          isp: '未知',
-          userAgent: 'Bot/Crawler 1.0',
-          totalFlow: '25.6MB',
-          riskLevel: 'high'
-        },
-        {
-          accessTime: '2025-08-07 14:28:30',
-          ipAddress: '118.89.45.23',
-          requestCount: 23,
-          region: '广东',
-          city: '深圳',
-          isp: '移动',
-          userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)',
-          totalFlow: '3.2MB',
-          riskLevel: 'medium'
+      // 时间选择器配置
+      pickerOptions: {
+        disabledDate(time) {
+          // 禁用今天之后的日期
+          return time.getTime() > Date.now()
         }
-      ]
+      },
+      statistics: {
+        avgRateBps: 0,
+        peakRateBps: 0,
+        avgAvgBps: 0,
+        peakMaxBps: 0
+      },
+      chartData: {
+        timeData: [],
+        rateBpsData: [],
+        avgBpsData: [],
+        maxBpsData: []
+      }
     }
   },
   mounted() {
-    this.getList()
+    // 设置默认时间范围为最近24小时
+    this.setDefaultTimeRange()
     this.initCharts()
   },
+  beforeDestroy() {
+    if (this.chart) {
+      this.chart.dispose()
+    }
+  },
   methods: {
-    getList() {
-      this.loading = true
-      // 模拟API调用
-      setTimeout(() => {
-        this.total = 500
+    // 设置默认时间范围
+    setDefaultTimeRange() {
+      const end = new Date()
+      const start = new Date(end.getTime() - 24 * 60 * 60 * 1000) // 24小时前
+      this.queryParams.dateRange = [
+        this.formatDateTime(start),
+        this.formatDateTime(end)
+      ]
+    },
+
+    // 格式化日期时间
+    formatDateTime(date) {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+    },
+
+    // 加载数据
+    async loadData() {
+      if (!this.queryParams.ip) {
+        this.$message.warning('请输入IP地址')
+        return
+      }
+
+      if (!this.queryParams.dateRange || this.queryParams.dateRange.length !== 2) {
+        this.$message.warning('请选择时间范围')
+        return
+      }
+
+      try {
+        this.loading = true
+        const startTime = new Date(this.queryParams.dateRange[0]).getTime()
+        const endTime = new Date(this.queryParams.dateRange[1]).getTime()
+
+        const data = {
+          ip: this.queryParams.ip, // IP是必填参数
+          condition: {
+            begin: startTime,
+            end: endTime
+          },
+          page: {
+            pageNo: 0 // 全量查询
+          }
+        }
+
+        const response = await getIpFlowApi(data)
+        if (response.code === '000000' && response.body.results) {
+          this.processData(response.body.results)
+          this.updateChart()
+        } else {
+          this.$message.error('获取数据失败')
+        }
+      } catch (error) {
+        console.error('加载数据失败:', error)
+        this.$message.error('加载数据失败')
+      } finally {
         this.loading = false
-      }, 1000)
+      }
     },
+
+    // 处理数据并计算统计信息
+    processData(results) {
+      if (!results || results.length === 0) {
+        this.statistics = {
+          avgRateBps: 0,
+          peakRateBps: 0,
+          avgAvgBps: 0,
+          peakMaxBps: 0
+        }
+        this.chartData = {
+          timeData: [],
+          rateBpsData: [],
+          avgBpsData: [],
+          maxBpsData: []
+        }
+        return
+      }
+
+      // 重置图表数据
+      this.chartData.timeData = []
+      this.chartData.rateBpsData = []
+      this.chartData.avgBpsData = []
+      this.chartData.maxBpsData = []
+
+      let totalRateBps = 0
+      let totalAvgBps = 0
+      let maxRateBps = 0
+      let maxAvgBps = 0
+      let maxMaxBps = 0
+      let avgBpsCount = 0
+      let maxBpsCount = 0
+
+      results.forEach(item => {
+        const rateBps = item.rate_bps || 0
+        const avgBps = item.avg_bps || null
+        const maxBps = item.max_bps || null
+
+        this.chartData.timeData.push(item.ts_ms)
+        this.chartData.rateBpsData.push(rateBps)
+        this.chartData.avgBpsData.push(avgBps)
+        this.chartData.maxBpsData.push(maxBps)
+
+        totalRateBps += rateBps
+        maxRateBps = Math.max(maxRateBps, rateBps)
+
+        if (avgBps !== null) {
+          totalAvgBps += avgBps
+          avgBpsCount++
+          maxAvgBps = Math.max(maxAvgBps, avgBps)
+        }
+
+        if (maxBps !== null) {
+          maxBpsCount++
+          maxMaxBps = Math.max(maxMaxBps, maxBps)
+        }
+      })
+
+      // 计算统计信息
+      const count = results.length
+      this.statistics = {
+        avgRateBps: count > 0 ? Math.round(totalRateBps / count) : 0,
+        peakRateBps: maxRateBps,
+        avgAvgBps: avgBpsCount > 0 ? Math.round(totalAvgBps / avgBpsCount) : 0,
+        peakMaxBps: maxMaxBps
+      }
+    },
+
+    // 更新图表
+    updateChart() {
+      if (this.chart) {
+        this.chart.setOption({
+          xAxis: {
+            data: this.chartData.timeData
+          },
+          series: [
+            { data: this.chartData.rateBpsData },
+            { data: this.chartData.avgBpsData },
+            { data: this.chartData.maxBpsData }
+          ]
+        })
+      }
+    },
+
+    // 查询
     handleQuery() {
-      this.queryParams.pageNum = 1
-      this.getList()
+      this.loadData()
     },
+
+    // 重置
     resetQuery() {
       this.queryParams = {
-        pageNum: 1,
-        pageSize: 10,
-        ipAddress: '',
-        region: '',
+        ip: '',
         dateRange: []
       }
-      this.getList()
-    },
-    exportData() {
-      this.$message.success('导出功能开发中...')
-    },
-    getRiskLevelType(level) {
-      const typeMap = {
-        high: 'danger',
-        medium: 'warning',
-        low: 'info',
-        normal: 'success'
+      this.setDefaultTimeRange()
+      // 重置后清空图表和统计数据
+      this.statistics = {
+        avgRateBps: 0,
+        peakRateBps: 0,
+        avgAvgBps: 0,
+        peakMaxBps: 0
       }
-      return typeMap[level] || 'info'
-    },
-    getRiskLevelText(level) {
-      const textMap = {
-        high: '高危',
-        medium: '中危',
-        low: '低危',
-        normal: '正常'
+      this.chartData = {
+        timeData: [],
+        rateBpsData: [],
+        avgBpsData: [],
+        maxBpsData: []
       }
-      return textMap[level] || '未知'
+      this.updateChart()
     },
+
+    // 初始化图表
     initCharts() {
-      // 这里需要引入 echarts 来初始化图表
-      console.log('初始化IP历史流量图表')
+      this.chart = this.$echarts.init(document.getElementById('ipHistoryChart'))
+
+      const option = {
+        title: {
+          show: false
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross'
+          },
+          formatter: (params) => {
+            const timeStr = this.formatTime(params[0].axisValue)
+            let tooltip = `时间: ${timeStr}<br/>`
+            params.forEach(param => {
+              if (param.value !== null && param.value !== undefined) {
+                const value = this.formatBytes(param.value)
+                tooltip += `${param.marker} ${param.seriesName}: ${value}<br/>`
+              }
+            })
+            return tooltip
+          }
+        },
+        legend: {
+          data: ['当前流量(bps)', '平均流量(bps)', '最大流量(bps)'],
+          top: 10
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '10%',
+          top: '15%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: this.chartData.timeData,
+          axisLabel: {
+            formatter: (value) => {
+              return this.formatTime(value, 'MM-dd HH:mm')
+            }
+          }
+        },
+        yAxis: [
+          {
+            type: 'value',
+            name: '流量(bps)',
+            position: 'left',
+            axisLabel: {
+              formatter: (value) => this.formatBytes(value)
+            }
+          }
+        ],
+        series: [
+          {
+            name: '当前流量(bps)',
+            type: 'line',
+            yAxisIndex: 0,
+            data: this.chartData.rateBpsData,
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 4,
+            lineStyle: {
+              color: '#409EFF',
+              width: 2
+            },
+            areaStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [{
+                  offset: 0, color: 'rgba(64, 158, 255, 0.3)'
+                }, {
+                  offset: 1, color: 'rgba(64, 158, 255, 0.1)'
+                }]
+              }
+            }
+          },
+          {
+            name: '平均流量(bps)',
+            type: 'line',
+            yAxisIndex: 0,
+            data: this.chartData.avgBpsData,
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 4,
+            lineStyle: {
+              color: '#67C23A',
+              width: 2
+            },
+            connectNulls: false // 不连接空值点
+          },
+          {
+            name: '最大流量(bps)',
+            type: 'line',
+            yAxisIndex: 0,
+            data: this.chartData.maxBpsData,
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 4,
+            lineStyle: {
+              color: '#E6A23C',
+              width: 2
+            },
+            connectNulls: false // 不连接空值点
+          }
+        ]
+      }
+
+      this.chart.setOption(option)
+
+      // 监听窗口大小变化
+      window.addEventListener('resize', () => {
+        this.chart.resize()
+      })
+    },
+
+    // 格式化字节数
+    formatBytes(bytes) {
+      if (bytes === 0) return '0 B'
+      const k = 1024
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+      const i = Math.floor(Math.log(bytes) / Math.log(k))
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    },
+
+    // 格式化时间
+    formatTime(timestamp, format = 'yyyy-MM-dd HH:mm:ss') {
+      const date = new Date(timestamp)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+
+      if (format === 'MM-dd HH:mm') {
+        return `${month}-${day} ${hours}:${minutes}`
+      }
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
     }
   }
 }
@@ -242,7 +444,7 @@ export default {
 
 <style scoped>
 .ip-history-flow-container {
-  padding: 20px;
+  padding: 0;
 }
 
 .filter-container {
@@ -250,6 +452,7 @@ export default {
   padding: 20px;
   background: #fff;
   border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .statistics-container {
@@ -257,15 +460,11 @@ export default {
 }
 
 .stat-card {
-  background: #fff;
-  border-radius: 4px;
-  padding: 20px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .stat-value {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: bold;
   color: #409eff;
   margin-bottom: 5px;
@@ -284,6 +483,7 @@ export default {
   background: #fff;
   border-radius: 4px;
   padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .chart-title {
@@ -291,11 +491,5 @@ export default {
   font-weight: bold;
   margin-bottom: 15px;
   color: #333;
-}
-
-.table-container {
-  background: #fff;
-  border-radius: 4px;
-  padding: 20px;
 }
 </style>

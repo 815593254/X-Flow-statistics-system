@@ -11,7 +11,7 @@
                 </el-col>
                 <el-col :span="6">
                     <div>
-                        <el-button type="primary" @click="handleQuery">筛选</el-button>
+                        <el-button type="primary" @click="handleQuery">查询</el-button>
                         <el-button @click="resetQuery">重置</el-button>
                     </div>
                 </el-col>
