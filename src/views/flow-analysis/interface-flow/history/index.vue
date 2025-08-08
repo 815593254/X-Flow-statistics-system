@@ -1,59 +1,68 @@
 <template>
   <div class="history-flow-container">
-    <div class="filter-container">
-      <el-form :inline="true" :model="queryParams" class="demo-form-inline">
-        <el-form-item label="时间范围">
-          <el-date-picker
-            v-model="queryParams.dateRange"
-            type="datetimerange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            format="yyyy-MM-dd HH:mm:ss"
-            value-format="yyyy-MM-dd HH:mm:ss"
-          />
-        </el-form-item>
-        <el-form-item label="接口名称">
-          <el-input v-model="queryParams.interfaceName" placeholder="请输入接口名称" clearable />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleQuery">查询</el-button>
-          <el-button @click="resetQuery">重置</el-button>
-          <el-button type="success" @click="exportData">导出</el-button>
-        </el-form-item>
-      </el-form>
-    </div>
-
-    <div class="statistics-container">
+    <el-card style="margin-top: 10px;">
       <el-row :gutter="20">
-        <el-col :span="6">
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.totalRequests }}</div>
-            <div class="stat-label">总请求数</div>
-          </div>
+        <el-col :span="8">
+          <el-date-picker v-model="queryParams.dateRange" type="datetimerange" range-separator="至"
+            start-placeholder="开始日期" end-placeholder="结束日期" format="yyyy-MM-dd HH:mm:ss"
+            value-format="yyyy-MM-dd HH:mm:ss" :picker-options="pickerOptions" />
         </el-col>
+
         <el-col :span="6">
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.avgResponseTime }}ms</div>
-            <div class="stat-label">平均响应时间</div>
-          </div>
+          <el-input v-model="queryParams.hostName" placeholder="请输入主机名" clearable />
         </el-col>
+
         <el-col :span="6">
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.errorRate }}%</div>
-            <div class="stat-label">错误率</div>
-          </div>
+          <el-input v-model="queryParams.interfaceName" placeholder="请输入接口名（PCIe地址）" clearable />
         </el-col>
-        <el-col :span="6">
-          <div class="stat-card">
-            <div class="stat-value">{{ statistics.peakQps }}</div>
-            <div class="stat-label">峰值QPS</div>
+
+        <el-col :span="4">
+          <div>
+            <el-button type="primary" @click="handleQuery">查询</el-button>
+            <el-button @click="resetQuery">重置</el-button>
           </div>
         </el-col>
       </el-row>
-    </div>
+    </el-card>
 
-    <div class="charts-container">
+    <el-card style="margin-top: 10px;">
+      <el-row :gutter="20">
+        <el-col :span="6">
+          <el-card>
+            <div class="stat-card">
+              <div class="stat-value">{{ formatBytes(statistics.avgRateBps) }}</div>
+              <div class="stat-label">平均流量 (bps)</div>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card>
+            <div class="stat-card">
+              <div class="stat-value">{{ formatBytes(statistics.peakRateBps) }}</div>
+              <div class="stat-label">峰值流量 (bps)</div>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card>
+            <div class="stat-card">
+              <div class="stat-value">{{ statistics.avgPps.toLocaleString() }}</div>
+              <div class="stat-label">平均包量 (pps)</div>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :span="6">
+          <el-card>
+            <div class="stat-card">
+              <div class="stat-value">{{ statistics.peakPps.toLocaleString() }}</div>
+              <div class="stat-label">峰值包量 (pps)</div>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </el-card>
+
+    <el-card style="margin-top: 10px;">
       <el-row :gutter="20">
         <el-col :span="24">
           <div class="chart-wrapper">
@@ -62,117 +71,345 @@
           </div>
         </el-col>
       </el-row>
-    </div>
-
-    <div class="table-container">
-      <el-table
-        v-loading="loading"
-        :data="tableData"
-        style="width: 100%"
-        :default-sort="{prop: 'requestTime', order: 'descending'}"
-      >
-        <el-table-column prop="requestTime" label="请求时间" width="180" sortable />
-        <el-table-column prop="interfaceName" label="接口名称" min-width="150" />
-        <el-table-column prop="requestCount" label="请求次数" width="120" sortable />
-        <el-table-column prop="responseTime" label="响应时间(ms)" width="130" sortable />
-        <el-table-column prop="statusCode" label="状态码" width="100" />
-        <el-table-column prop="clientIp" label="客户端IP" width="130" />
-        <el-table-column prop="userAgent" label="用户代理" min-width="200" show-overflow-tooltip />
-      </el-table>
-
-      <pagination
-        v-show="total > 0"
-        :total="total"
-        :page.sync="queryParams.pageNum"
-        :limit.sync="queryParams.pageSize"
-        @pagination="getList"
-      />
-    </div>
+    </el-card>
   </div>
 </template>
 
 <script>
+import { getTrafficApi } from '@/api/flow-analysis/interface-flow'
+
 export default {
   name: 'InterfaceFlowHistory',
   data() {
     return {
       loading: false,
-      total: 0,
+      chart: null,
       queryParams: {
-        pageNum: 1,
-        pageSize: 10,
+        hostName: '',
         interfaceName: '',
         dateRange: []
       },
-      statistics: {
-        totalRequests: 125684,
-        avgResponseTime: 245,
-        errorRate: 3.2,
-        peakQps: 450
-      },
-      tableData: [
-        {
-          requestTime: '2025-08-07 14:30:25',
-          interfaceName: '/api/user/login',
-          requestCount: 1,
-          responseTime: 120,
-          statusCode: 200,
-          clientIp: '192.168.1.100',
-          userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        },
-        {
-          requestTime: '2025-08-07 14:30:20',
-          interfaceName: '/api/data/query',
-          requestCount: 1,
-          responseTime: 350,
-          statusCode: 200,
-          clientIp: '192.168.1.101',
-          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-        },
-        {
-          requestTime: '2025-08-07 14:29:45',
-          interfaceName: '/api/file/upload',
-          requestCount: 1,
-          responseTime: 2800,
-          statusCode: 500,
-          clientIp: '192.168.1.102',
-          userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+      // 时间选择器配置
+      pickerOptions: {
+        disabledDate(time) {
+          // 禁用今天之后的日期
+          return time.getTime() > Date.now()
         }
-      ]
+      },
+      statistics: {
+        avgRateBps: 0,
+        peakRateBps: 0,
+        avgPps: 0,
+        peakPps: 0
+      },
+      chartData: {
+        timeData: [],
+        rateBpsData: [],
+        ppsData: []
+      }
     }
   },
   mounted() {
-    this.getList()
+    // 设置默认时间范围为最近24小时
+    this.setDefaultTimeRange()
     this.initCharts()
   },
+  beforeDestroy() {
+    if (this.chart) {
+      this.chart.dispose()
+    }
+  },
   methods: {
-    getList() {
-      this.loading = true
-      // 模拟API调用
-      setTimeout(() => {
-        this.total = 100
+    // 设置默认时间范围
+    setDefaultTimeRange() {
+      const end = new Date()
+      const start = new Date(end.getTime() - 24 * 60 * 60 * 1000) // 24小时前
+      this.queryParams.dateRange = [
+        this.formatDateTime(start),
+        this.formatDateTime(end)
+      ]
+    },
+
+    // 格式化日期时间
+    formatDateTime(date) {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+    },
+
+    // 加载数据
+    async loadData() {
+      if (!this.queryParams.dateRange || this.queryParams.dateRange.length !== 2) {
+        this.$message.warning('请选择时间范围')
+        return
+      }
+
+      try {
+        this.loading = true
+        const startTime = new Date(this.queryParams.dateRange[0]).getTime()
+        const endTime = new Date(this.queryParams.dateRange[1]).getTime()
+
+        const data = {
+          condition: {
+            begin: startTime,
+            end: endTime
+          },
+          page: {
+            pageNo: 0 // 全量查询
+          }
+        }
+
+        // 添加筛选条件
+        if (this.queryParams.hostName) {
+          data.host_name = this.queryParams.hostName
+        }
+        if (this.queryParams.interfaceName) {
+          data.if_name = this.queryParams.interfaceName
+        }
+
+        const response = await getTrafficApi(data)
+        if (response.code === '000000' && response.body.results) {
+          this.processData(response.body.results)
+          this.updateChart()
+        } else {
+          this.$message.error('获取数据失败')
+        }
+      } catch (error) {
+        console.error('加载数据失败:', error)
+        this.$message.error('加载数据失败')
+      } finally {
         this.loading = false
-      }, 1000)
+      }
     },
+
+    // 处理数据并计算统计信息
+    processData(results) {
+      if (!results || results.length === 0) {
+        this.statistics = {
+          avgRateBps: 0,
+          peakRateBps: 0,
+          avgPps: 0,
+          peakPps: 0
+        }
+        this.chartData = {
+          timeData: [],
+          rateBpsData: [],
+          ppsData: []
+        }
+        return
+      }
+
+      // 重置图表数据
+      this.chartData.timeData = []
+      this.chartData.rateBpsData = []
+      this.chartData.ppsData = []
+
+      let totalRateBps = 0
+      let totalPps = 0
+      let maxRateBps = 0
+      let maxPps = 0
+
+      results.forEach(item => {
+        const rateBps = item.rate_bps || 0
+        const pps = item.pps || 0
+
+        this.chartData.timeData.push(item.ts_ms)
+        this.chartData.rateBpsData.push(rateBps)
+        this.chartData.ppsData.push(pps)
+
+        totalRateBps += rateBps
+        totalPps += pps
+        maxRateBps = Math.max(maxRateBps, rateBps)
+        maxPps = Math.max(maxPps, pps)
+      })
+
+      // 计算统计信息
+      const count = results.length
+      this.statistics = {
+        avgRateBps: count > 0 ? Math.round(totalRateBps / count) : 0,
+        peakRateBps: maxRateBps,
+        avgPps: count > 0 ? Math.round(totalPps / count) : 0,
+        peakPps: maxPps
+      }
+    },
+
+    // 更新图表
+    updateChart() {
+      if (this.chart) {
+        this.chart.setOption({
+          xAxis: {
+            data: this.chartData.timeData
+          },
+          series: [
+            { data: this.chartData.rateBpsData },
+            { data: this.chartData.ppsData }
+          ]
+        })
+      }
+    },
+
+    // 查询
     handleQuery() {
-      this.queryParams.pageNum = 1
-      this.getList()
+      this.loadData()
     },
+
+    // 重置
     resetQuery() {
       this.queryParams = {
-        pageNum: 1,
-        pageSize: 10,
+        hostName: '',
         interfaceName: '',
         dateRange: []
       }
-      this.getList()
+      this.setDefaultTimeRange()
+      this.loadData()
     },
-    exportData() {
-      this.$message.success('导出功能开发中...')
-    },
+
+    // 初始化图表
     initCharts() {
-      // 这里需要引入 echarts 来初始化图表
-      console.log('初始化历史流量图表')
+      this.chart = this.$echarts.init(document.getElementById('historyChart'))
+
+      const option = {
+        title: {
+          show: false
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'cross'
+          },
+          formatter: (params) => {
+            const timeStr = this.formatTime(params[0].axisValue)
+            let tooltip = `时间: ${timeStr}<br/>`
+            params.forEach(param => {
+              const value = param.seriesName === '流量(bps)'
+                ? this.formatBytes(param.value)
+                : param.value.toLocaleString()
+              tooltip += `${param.marker} ${param.seriesName}: ${value}<br/>`
+            })
+            return tooltip
+          }
+        },
+        legend: {
+          data: ['流量(bps)', '包量(pps)'],
+          top: 10
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '10%',
+          top: '15%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: this.chartData.timeData,
+          axisLabel: {
+            formatter: (value) => {
+              return this.formatTime(value, 'MM-dd HH:mm')
+            }
+          }
+        },
+        yAxis: [
+          {
+            type: 'value',
+            name: '流量(bps)',
+            position: 'left',
+            axisLabel: {
+              formatter: (value) => this.formatBytes(value)
+            }
+          },
+          {
+            type: 'value',
+            name: '包量(pps)',
+            position: 'right',
+            axisLabel: {
+              formatter: (value) => value.toLocaleString()
+            }
+          }
+        ],
+        series: [
+          {
+            name: '流量(bps)',
+            type: 'line',
+            yAxisIndex: 0,
+            data: this.chartData.rateBpsData,
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 4,
+            lineStyle: {
+              color: '#409EFF',
+              width: 2
+            },
+            areaStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [{
+                  offset: 0, color: 'rgba(64, 158, 255, 0.3)'
+                }, {
+                  offset: 1, color: 'rgba(64, 158, 255, 0.1)'
+                }]
+              }
+            }
+          },
+          {
+            name: '包量(pps)',
+            type: 'line',
+            yAxisIndex: 1,
+            data: this.chartData.ppsData,
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 4,
+            lineStyle: {
+              color: '#67C23A',
+              width: 2
+            }
+          }
+        ]
+      }
+
+      this.chart.setOption(option)
+
+      // 监听窗口大小变化
+      window.addEventListener('resize', () => {
+        this.chart.resize()
+      })
+
+      // 加载初始数据
+      this.loadData()
+    },
+
+    // 格式化字节数
+    formatBytes(bytes) {
+      if (bytes === 0) return '0 B'
+      const k = 1024
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+      const i = Math.floor(Math.log(bytes) / Math.log(k))
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+    },
+
+    // 格式化时间
+    formatTime(timestamp, format = 'yyyy-MM-dd HH:mm:ss') {
+      const date = new Date(timestamp)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+
+      if (format === 'MM-dd HH:mm') {
+        return `${month}-${day} ${hours}:${minutes}`
+      }
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
     }
   }
 }
@@ -196,15 +433,11 @@ export default {
 }
 
 .stat-card {
-  background: #fff;
-  border-radius: 4px;
-  padding: 20px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .stat-value {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: bold;
   color: #409eff;
   margin-bottom: 5px;
@@ -231,12 +464,5 @@ export default {
   font-weight: bold;
   margin-bottom: 15px;
   color: #333;
-}
-
-.table-container {
-  background: #fff;
-  border-radius: 4px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>

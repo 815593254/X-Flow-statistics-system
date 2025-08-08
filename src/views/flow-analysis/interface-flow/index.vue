@@ -1,12 +1,12 @@
 <template>
   <div class="app-container">
     <div class="tab-container">
-      <el-tabs v-model="activeTab" type="card" @tab-click="handleTabClick">
+      <el-tabs v-model="activeTab" @tab-click="handleTabClick">
         <el-tab-pane label="实时流量" name="realtime"></el-tab-pane>
         <el-tab-pane label="历史流量" name="history"></el-tab-pane>
       </el-tabs>
-      <router-view />
     </div>
+      <router-view />
   </div>
 </template>
 
@@ -50,7 +50,7 @@ export default {
 
 .tab-container {
   background: #fff;
-  padding: 20px;
+  padding: 10px 20px 20px 20px;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

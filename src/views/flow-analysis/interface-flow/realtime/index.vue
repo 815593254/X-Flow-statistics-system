@@ -1,7 +1,7 @@
 <template>
     <div class="realtime-flow-container">
         <!-- 筛选条件 -->
-        <div class="filter-container">
+        <el-card >
             <el-row :gutter="20">
                 <el-col :span="6">
                     <el-input v-model="queryForm.hostName" placeholder="请输入主机名" clearable />
@@ -16,42 +16,47 @@
                     </div>
                 </el-col>
             </el-row>
-        </div>
+        </el-card>
 
         <!-- 实时状态信息 -->
-        <div class="status-container">
+        <el-card style="margin-top: 10px;">
             <el-row :gutter="20">
                 <el-col :span="8">
-                    <div class="status-card">
-                        <div class="status-value">{{ latestData.rate_bps || 0 }}</div>
-                        <div class="status-label">当前流量 (bps)</div>
-                    </div>
+                    <el-card>
+                        <div class="status-card">
+                            <div class="status-value">{{ latestData.rate_bps || 0 }}</div>
+                            <div class="status-label">当前流量 (bps)</div>
+                        </div>
+                    </el-card>
                 </el-col>
                 <el-col :span="8">
-                    <div class="status-card">
-                        <div class="status-value">{{ latestData.pps || 0 }}</div>
-                        <div class="status-label">当前包量 (pps)</div>
-                    </div>
+                    <el-card>
+                        <div class="status-card">
+                            <div class="status-value">{{ latestData.pps || 0 }}</div>
+                            <div class="status-label">当前包量 (pps)</div>
+                        </div>
+                    </el-card>
                 </el-col>
                 <el-col :span="8">
-                    <div class="status-card">
-                        <div class="status-value">{{ maxRateBps }}</div>
-                        <div class="status-label">5分钟峰值 (bps)</div>
-                    </div>
+                    <el-card>
+                        <div class="status-card">
+                            <div class="status-value">{{ maxRateBps }}</div>
+                            <div class="status-label">5分钟峰值 (bps)</div>
+                        </div>
+                    </el-card>
                 </el-col>
                 <!-- 实时状态显示已移除 -->
             </el-row>
-        </div>
+        </el-card>
 
         <!-- 实时流量图表 -->
-        <div class="charts-container">
+        <el-card style="margin-top: 10px;">
             <el-row :gutter="20">
                 <el-col :span="24">
                     <div class="chart-wrapper">
                         <div class="chart-header">
                             <div class="chart-title">接口流量监控（最近5分钟）</div>
                             <div class="chart-info">
-                                <span>自动更新间隔：30秒</span>
                                 <span style="margin-left: 20px;">最后更新：{{ lastUpdateTime }}</span>
                             </div>
                         </div>
@@ -59,7 +64,7 @@
                     </div>
                 </el-col>
             </el-row>
-        </div>
+        </el-card>
     </div>
 </template>
 
@@ -366,6 +371,7 @@ export default {
 
 <style scoped>
 .realtime-flow-container {
+    margin-top: 10px;
     padding: 0;
 }
 
@@ -382,11 +388,11 @@ export default {
 }
 
 .status-card {
-    background: #fff;
-    border-radius: 4px;
-    padding: 20px;
+    /* background: #fff; */
+    /* border-radius: 4px; */
+    /* padding: 20px; */
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
 }
 
 .status-value {
