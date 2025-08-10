@@ -2,9 +2,16 @@
   <div class="tab_main_content components-content">
     <el-row type="flex" class="table_form_content" justify="start" align="bottom">
       <el-col class="left-form">
-        <el-form :model="searchForm" :inline="true" label-position="left" label-width="80px">
-          <el-form-item label="模板名称：">
-            <el-input v-model="searchForm.dataTemplateName" class="search_input" placeholder="请输入模板名称">
+        <el-form :model="searchForm" :inline="true" label-position="left" label-width="85px">
+          <el-form-item label="抓包状态:">
+            <el-select v-model="searchForm.captureRes" placeholder="请选择">
+              <el-option label="全部" :value="null"> </el-option>
+              <el-option label="已完成" value="1"> </el-option>
+              <el-option label="未完成" value="0"> </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="抓包IP:">
+            <el-input v-model="searchForm.ip" class="search_input" placeholder="抓包IP">
             </el-input>
           </el-form-item>
           <el-form-item>
@@ -12,11 +19,12 @@
           </el-form-item>
         </el-form>
       </el-col>
+
       <el-col class="right-form">
         <div>
-          <el-button v-permission="'3-2-add'" type="primary" size="small" @click="addData">新增</el-button>
+          <el-button v-permission="'1-4-add'" type="primary" size="small" @click="addData">发起手动抓包</el-button>
         </div>
-        <div v-permission="'3-2-delete'" class="icon-button delete-button" @click="deleteManyData">
+        <div v-permission="'1-4-delete'" class="icon-button delete-button" @click="deleteManyData">
           <el-tooltip class="item" effect="dark" content="批量删除" placement="top-start">
             <i class="el-icon-delete"></i>
           </el-tooltip>
@@ -31,7 +39,6 @@
     <div class="host-table">
       <!-- 表格 -->
       <el-table
-        ref="multipleTable"
         v-loading="isLoading"
         element-loading-background="rgba(255, 255, 255, .0)"
         element-loading-text="加载中，请稍后..."
@@ -46,28 +53,35 @@
       >
         <el-table-column type="selection" width="40"> </el-table-column>
         <el-table-column type="index" label="序号" width="50"> </el-table-column>
-        <el-table-column prop="dataTemplateName" label="模板名称" min-width="130" :show-overflow-tooltip="true"> </el-table-column>
-        <el-table-column prop="dataTemplateDesc" label="说明" min-width="130" :show-overflow-tooltip="true"> </el-table-column>
-        <el-table-column prop="operateTime" label="操作时间" min-width="150" :show-overflow-tooltip="true">
+        <el-table-column prop="ip" label="抓包IP" width="150"> </el-table-column>
+        <el-table-column prop="file" label="抓包文件地址" width="500"></el-table-column>
+        <el-table-column prop="captureRes" label="抓包状态" width="120">
           <template slot-scope="{row}">
-            {{ parseTime(row.operateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
+            {{ row.captureRes == 0? '未完成':'已完成' }}
           </template>
         </el-table-column>
-        <el-table-column :label="$t('common.operation')" width="200">
+        <el-table-column prop="createTime" label="抓包时间" width="180">
+          <template slot-scope="{row}">
+            {{ parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="updateTime" label="更新时间" width="180">
+          <template slot-scope="{row}">
+            {{ parseTime(row.updateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
+          </template>
+        </el-table-column>
+
+        <el-table-column :label="$t('common.operation')" width="220">
           <template slot-scope="{row}">
             <div class="table-button">
-              <span v-permission="'3-2-application'" class="icon-button">
-                <el-button v-if="row.isDefault === 1" type="text" class="detail-btn" @click="application(row)">取消应用</el-button>
-                <el-button v-else type="text" class="detail-btn" @click="application(row)">应用</el-button>
-              </span>
-              <span v-permission="'3-2-rule'" class="icon-button">
-                <el-button type="text" class="detail-btn" @click="ruleData(row)">规则</el-button>
-              </span>
-              <span v-permission="'3-2-edit'" class="icon-button">
+              <!-- <span v-permission="'1-4-edit'" class="icon-button">
                 <el-button type="text" class="detail-btn" @click="eidtData(row)">编辑</el-button>
-              </span>
-              <span v-permission="'3-2-delete'" class="icon-button">
+              </span> -->
+              <span v-permission="'1-4-delete'" class="icon-button">
                 <el-button type="text" class="detail-btn" @click="deleteData(row)">删除</el-button>
+              </span>
+              <span v-permission="'1-4-down'" class="icon-button">
+                <el-button type="text" class="detail-btn" @click="downFile(row)">下载抓包文件</el-button>
               </span>
             </div>
           </template>
@@ -87,13 +101,13 @@
       </div>
     </div>
     <!--新增编辑弹窗-->
-    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="500px">
+    <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px">
       <el-form ref="addFormData" class="add_form_data" :model="formData" :rules="rules" label-width="120px">
-        <el-form-item label="模板名称：" prop="dataTemplateName">
-          <el-input v-model.trim="formData.dataTemplateName"></el-input>
+        <el-form-item label="IP：" prop="ip">
+          <el-input v-model.trim="formData.ip"></el-input>
         </el-form-item>
-        <el-form-item label="说明：" prop="dataTemplateDesc">
-          <el-input v-model.trim="formData.dataTemplateDesc"></el-input>
+        <el-form-item label="数量" prop="countVal">
+          <el-input v-model.trim="formData.countVal"></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -105,14 +119,7 @@
 </template>
 
 <script>
-import {
-  getTemplateList,
-  deleteTemplateData,
-  applicationTemplateData,
-  deleteTemplateManyData,
-  createTemplateData,
-  updateTemplateData
-} from '@/api/classification-management/template-management/index'
+import { sendDemand, getList, deleteData, getDetail, editData } from '@/api/manual-capture/index'
 import { parseTime } from '@/utils'
 import { mapGetters } from 'vuex'
 import _ from 'lodash'
@@ -131,19 +138,22 @@ export default {
         pageSize: 20,
       },
       searchForm: {
-        dataTemplateName: '',
+        captureRes: '',
+        ip: '',
       },
+      dataSource: [],
       isLoading: false,
       multipleSelection: [],
       isaddLoading: false,
-      dialogTitle: '新增',
+      dialogTitle: '手动抓包',
       dialogVisible: false,
       formData: {
-        dataTemplateName: '',
-        dataTemplateDesc: '',
+        ip: '',
+        countVal: ''
       },
       rules: {
-        dataTemplateName: [{ required: true, message: '请输入模板名称', trigger: 'blur' }],
+        ip: [{ required: true, message: '请输入ip', trigger: 'blur' }],
+        countVal: [{ required: true, message: '请输入数量', trigger: 'blur' }],
       },
     }
   },
@@ -157,10 +167,14 @@ export default {
       this.getList()
     }
   },
-  mounted() {
+  async mounted() {
     this.getList()
   },
   methods: {
+    downFile(row){
+      window.open(row.file, '_blank');
+    },
+
     // 处理多选框的值
     handleSelectionChange(val) {
       this.multipleSelection = val
@@ -177,41 +191,20 @@ export default {
       this.getList()
     },
     addData() {
-      // this.$router.push({ path: '/classification-management/template/new' })
       this.dialogTitle = '新增'
       this.dialogVisible = true
       this.formData = {
-        dataTemplateName: '',
-        dataTemplateDesc: '',
+        ip: '',
+        countVal: ''
       }
     },
     eidtData(row) {
-      // this.$router.push({ path: '/classification-management/template/edit/' + row.dataTemplateId })
       this.dialogTitle = '编辑'
       this.dialogVisible = true
       this.formData = {
-        dataTemplateId: row.dataTemplateId,
-        dataTemplateName: row.dataTemplateName,
-        dataTemplateDesc: row.dataTemplateDesc,
+        ip: row.ip,
+        countVal: row.countVal
       }
-    },
-    ruleData(row) {
-      this.$router.push({ path: '/classification-management/template/rule/' + row.dataTemplateId })
-    },
-    application(row) {
-      applicationTemplateData({
-        dataTemplateId: parseInt(row.dataTemplateId),
-        isDefault: row.isDefault === 1 ? 0 : 1
-      }).then(() => {
-        this.$message({
-          type: 'success',
-          message: row.isDefault === 1 ? '取消应用成功' : '应该成功'
-        })
-        this.tbParam.tableData = []
-        this.getList()
-      }).catch(err => {
-        console.log(err)
-      })
     },
     deleteData(row) {
       this.$confirm('确定要删除数据吗？', '提示', {
@@ -219,9 +212,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        deleteTemplateData({
-          dataTemplateId: row.dataTemplateId
-        }).then(() => {
+        deleteData(row).then(() => {
           this.$message({
             type: 'success',
             message: '删除成功'
@@ -249,10 +240,10 @@ export default {
           var dataId_list = []
           for (var i = 0; i < this.multipleSelection.length; i++) {
             var item = this.multipleSelection[i]
-            dataId_list.push(item.dataTemplateId)
+            dataId_list.push(item.id)
           }
-          deleteTemplateManyData({
-            dataTemplateId: dataId_list.join(',')
+          deleteData({
+            id: dataId_list.join(',')
           }).then(() => {
             this.$message({
               type: 'success',
@@ -280,7 +271,7 @@ export default {
         }
       }
       this.isLoading = true
-      getTemplateList(
+      getList(
         params
       ).then(response => {
         this.tbParam.tableData = response.body.results
@@ -311,13 +302,13 @@ export default {
       this.$refs[refForm].validate((valid) => {
         if (valid) {
           this.isaddLoading = true
-          var userapi = this.formData['dataTemplateId'] ? updateTemplateData : createTemplateData
+          var userapi = this.formData['id'] ? editData : sendDemand
           userapi(
             this.formData
           ).then(() => {
             this.$message({
               type: 'success',
-              message: this.formData['dataTemplateId'] ? '编辑成功' : '新增成功'
+              message: this.formData['id'] ? '编辑成功' : '发起手动抓包成功'
             })
             this.getList()
             this.dialogVisible = false

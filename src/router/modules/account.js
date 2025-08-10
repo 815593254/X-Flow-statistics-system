@@ -22,7 +22,7 @@ const accountRouter = [
         component: () => import('@/views/flow-analysis/interface-flow/index'),
         name: 'InterfaceFlow',
         disabled: false,
-        meta: { title: '接口流量', activeMenu: '/flow-analysis/interface-flow', number: '1-1', permission: [{ title: '实时流量', number: '1-1-1' },{ title: '历史流量', number: '1-1-2' }] },
+        meta: { title: '接口流量', activeMenu: '/flow-analysis/interface-flow', number: '1-1', permission: [{ title: '实时流量', number: '1-1-1' }, { title: '历史流量', number: '1-1-2' }] },
         redirect: '/flow-analysis/interface-flow/realtime',
         // children_count: 2,
         children: [
@@ -31,7 +31,7 @@ const accountRouter = [
             path: 'realtime',
             component: () => import('@/views/flow-analysis/interface-flow/realtime/index'),
             name: 'InterfaceFlowRealtime',
-            meta: { title: '实时流量', label: 'realtime', activeMenu: '/flow-analysis/interface-flow', number: '1-1-1',  },
+            meta: { title: '实时流量', label: 'realtime', activeMenu: '/flow-analysis/interface-flow', number: '1-1-1', },
             hidden: true,
           },
           // 历史流量
@@ -39,7 +39,7 @@ const accountRouter = [
             path: 'history',
             component: () => import('@/views/flow-analysis/interface-flow/history/index'),
             name: 'InterfaceFlowHistory',
-            meta: { title: '历史流量', label: 'history', activeMenu: '/flow-analysis/interface-flow',  number: '1-1-2',  },
+            meta: { title: '历史流量', label: 'history', activeMenu: '/flow-analysis/interface-flow', number: '1-1-2', },
             hidden: true,
           },
         ]
@@ -50,7 +50,7 @@ const accountRouter = [
         component: () => import('@/views/flow-analysis/ip-flow/index'),
         name: 'IpFlow',
         disabled: false,
-        meta: { title: 'IP流量', activeMenu: '/flow-analysis/ip-flow', number: '1-2', permission: [{ title: '实时流量', number: '1-2-1' },{ title: '历史流量', number: '1-2-2' }] },
+        meta: { title: 'IP流量', activeMenu: '/flow-analysis/ip-flow', number: '1-2', permission: [{ title: '实时流量', number: '1-2-1' }, { title: '历史流量', number: '1-2-2' }] },
         redirect: '/flow-analysis/ip-flow/realtime',
         // children_count: 2,
         children: [
@@ -59,7 +59,7 @@ const accountRouter = [
             path: 'realtime',
             component: () => import('@/views/flow-analysis/ip-flow/realtime/index'),
             name: 'IpFlowRealtime',
-            meta: { title: '实时流量', label: 'realtime', activeMenu: '/flow-analysis/ip-flow', number: '1-2-1',  },
+            meta: { title: '实时流量', label: 'realtime', activeMenu: '/flow-analysis/ip-flow', number: '1-2-1', },
             hidden: true,
           },
           // 历史流量
@@ -67,81 +67,53 @@ const accountRouter = [
             path: 'history',
             component: () => import('@/views/flow-analysis/ip-flow/history/index'),
             name: 'IpFlowHistory',
-            meta: { title: '历史流量', label: 'history', activeMenu: '/flow-analysis/ip-flow', number: '1-2-2',  },
+            meta: { title: '历史流量', label: 'history', activeMenu: '/flow-analysis/ip-flow', number: '1-2-2', },
             hidden: true,
           },
         ]
       },
     ],
   },
+  {
+    path: '/manual-capture',
+    component: Layout,
+    name: '',
+    disabled: false,
+    meta: { title: '手动抓包', icon: 'el-icon-s-order', number: '2' },
+    children_count: 1,
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/manual-capture/index'),
+        name: 'manualCapture',
+        disabled: false,
+        hidden: true,
+        meta: { title: '手动抓包', activeMenu: '/manual-capture', number: '2', permission: [{ title: '查看', number: '2-1' }, { title: '手动抓包', number: '2-1-add' }, { title: '删除手动抓包', number: '2-1-delete' }, { title: '下载抓包文件', number: '2-1-down' }] }
+      },
+    ],
+  },
 
-  // // 流量分析
-  // {
-  //   path: '/flow-analysis',
-  //   component: Layout,
-  //   redirect: '/flow-analysis/interface-flow',
-  //   disabled: false,
-  //   meta: { title: '流量分析', icon: 'el-icon-stopwatch', number: '1' },
-  //   children_count: 2,
-  //   children: [
-  //     //  接口流量
-  //     {
-  //       path: 'interface-flow',
-  //       component: () => import('@/views/flow-analysis/interface-flow/index'),
-  //       name: 'InterfaceFlow',
-  //       disabled: false,
-  //       meta: { title: '接口流量', activeMenu: '/flow-analysis/interface-flow', number: '1-1', permission: [{ title: '查看1', number: '1-1-see' }] },
-  //       redirect: '/flow-analysis/interface-flow/realtime',
-  //       // children_count: 2,
-  //       children: [
-  //         // 实时流量
-  //         {
-  //           path: 'realtime',
-  //           component: () => import('@/views/flow-analysis/interface-flow/realtime/index'),
-  //           name: 'InterfaceFlowRealtime',
-  //           meta: { title: '实时流量', label: 'realtime', activeMenu: '/flow-analysis/interface-flow', number: '1-1-1', permission: [{ title: '查看', number: '1-1-1-see' }] },
-  //           hidden: true,
-  //         },
-  //         // 历史流量
-  //         {
-  //           path: 'history',
-  //           component: () => import('@/views/flow-analysis/interface-flow/history/index'),
-  //           name: 'InterfaceFlowHistory',
-  //           meta: { title: '历史流量', label: 'history', activeMenu: '/flow-analysis/interface-flow',  number: '1-1-2', permission: [{ title: '查看', number: '1-1-2-see' }] },
-  //           hidden: true,
-  //         },
-  //       ]
-  //     },
-  //     //  IP流量
-  //     {
-  //       path: 'ip-flow',
-  //       component: () => import('@/views/flow-analysis/ip-flow/index'),
-  //       name: 'IpFlow',
-  //       disabled: false,
-  //       meta: { title: 'IP流量', activeMenu: '/flow-analysis/ip-flow', number: '1-2', permission: [{ title: '查看2', number: '1-2-see' }] },
-  //       redirect: '/flow-analysis/ip-flow/realtime',
-  //       // children_count: 2,
-  //       // children: [
-  //       //   // 实时流量
-  //       //   {
-  //       //     path: 'realtime',
-  //       //     component: () => import('@/views/flow-analysis/ip-flow/realtime/index'),
-  //       //     name: 'IpFlowRealtime',
-  //       //     meta: { title: '实时流量', label: 'realtime', activeMenu: '/flow-analysis/ip-flow', number: '1-2-1', permission: [{ title: '查看', number: '1-2-1-see' }] },
-  //       //     hidden: true,
-  //       //   },
-  //       //   // 历史流量
-  //       //   {
-  //       //     path: 'history',
-  //       //     component: () => import('@/views/flow-analysis/ip-flow/history/index'),
-  //       //     name: 'IpFlowHistory',
-  //       //     meta: { title: '历史流量', label: 'history', activeMenu: '/flow-analysis/ip-flow', number: '1-2-2', permission: [{ title: '查看', number: '1-2-2-see' }] },
-  //       //     hidden: true,
-  //       //   },
-  //       // ]
-  //     },
-  //   ],
-  // },
+  {
+    path: '/report-exigence',
+    component: Layout,
+    name: '',
+    disabled: false,
+    meta: { title: '流量告警', icon: 'el-icon-message-solid', number: '3' },
+    children_count: 1,
+    children: [
+      //  流量告警
+      {
+        path: '',
+        component: () => import('@/views/report-exigence/index'),
+        name: 'reportExigence',
+        disabled: false,
+        meta: { title: '流量告警', activeMenu: '/report-exigence', number: '3', permission: [{ title: '查看', number: '3-1-see' }, { title: '删除告警', number: '3-1-delete' }, { title: '下载告警文件', number: '3-1-down' }] }
+      },
+    ],
+  },
+
+
+
 
   // 用户管理
   {
@@ -202,16 +174,6 @@ const accountRouter = [
       },
     ],
   },
-
-  // //  数据分析-数据资产报告
-  // {
-  //   path: '/asset-report/:id',
-  //   component: () => import('@/views/data-analysis/asset-map/components/asset_report'),
-  //   name: 'assetReport',
-  //   disabled: false,
-  //   hidden: true,
-  //   meta: { title: '数据资产报告', activeMenu: '', number: '1-1-report' }
-  // },
 
 ]
 

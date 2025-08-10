@@ -9,7 +9,7 @@ import moment from 'moment'
 var tips_count = 0
 // var baseUrl = window.location.protocol + '//' + window.location.hostname + ':8008'
 // var baseUrl = 'http://my.pinghome.cn:8096'
-var baseUrl = 'http://47.113.145.208:8098'
+var baseUrl = 'http://14.152.85.14:8098'
 // var baseUrl = 'http://127.0.0.1:8096'
 // var baseUrl = 'http://10.1.25.99:8116'
 // var baseUrl = 'http://10.1.25.85:8116'

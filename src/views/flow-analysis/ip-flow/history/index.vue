@@ -5,7 +5,7 @@
         <el-col :span="8">
           <el-date-picker v-model="queryParams.dateRange" type="datetimerange" range-separator="至"
             start-placeholder="开始日期" end-placeholder="结束日期" format="yyyy-MM-dd HH:mm:ss"
-            value-format="yyyy-MM-dd HH:mm:ss" :picker-options="pickerOptions" />
+            value-format="yyyy-MM-dd HH:mm:ss" :picker-options="pickerOptions" @change="handleQuery"/>
         </el-col>
 
         <el-col :span="6">
@@ -23,23 +23,23 @@
 
     <el-card style="margin-top: 10px;">
       <el-row :gutter="20">
-        <el-col :span="6">
+        <!-- <el-col :span="6">
           <el-card>
             <div class="stat-card">
               <div class="stat-value">{{ formatBytes(statistics.avgRateBps) }}</div>
               <div class="stat-label">平均流量 (bps)</div>
             </div>
           </el-card>
-        </el-col>
-        <el-col :span="6">
+        </el-col> -->
+        <!-- <el-col :span="6">
           <el-card>
             <div class="stat-card">
               <div class="stat-value">{{ formatBytes(statistics.peakRateBps) }}</div>
               <div class="stat-label">峰值流量 (bps)</div>
             </div>
           </el-card>
-        </el-col>
-        <el-col :span="6">
+        </el-col> -->
+        <el-col :span="12">
           <el-card>
             <div class="stat-card">
               <div class="stat-value">{{ formatBytes(statistics.avgAvgBps) }}</div>
@@ -47,11 +47,11 @@
             </div>
           </el-card>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="12">
           <el-card>
             <div class="stat-card">
               <div class="stat-value">{{ formatBytes(statistics.peakMaxBps) }}</div>
-              <div class="stat-label">峰值最大流量 (bps)</div>
+              <div class="stat-label">峰值流量 (bps)</div>
             </div>
           </el-card>
         </el-col>
@@ -92,14 +92,14 @@ export default {
         }
       },
       statistics: {
-        avgRateBps: 0,
-        peakRateBps: 0,
+        // avgRateBps: 0,
+        // peakRateBps: 0,
         avgAvgBps: 0,
         peakMaxBps: 0
       },
       chartData: {
         timeData: [],
-        rateBpsData: [],
+        // rateBpsData: [],
         avgBpsData: [],
         maxBpsData: []
       }
@@ -161,7 +161,7 @@ export default {
             end: endTime
           },
           page: {
-            pageNo: 0 // 全量查询
+            pageSize: 0 // 全量查询
           }
         }
 
@@ -184,14 +184,14 @@ export default {
     processData(results) {
       if (!results || results.length === 0) {
         this.statistics = {
-          avgRateBps: 0,
-          peakRateBps: 0,
+          // avgRateBps: 0,
+          // peakRateBps: 0,
           avgAvgBps: 0,
           peakMaxBps: 0
         }
         this.chartData = {
           timeData: [],
-          rateBpsData: [],
+          // rateBpsData: [],
           avgBpsData: [],
           maxBpsData: []
         }
@@ -200,39 +200,39 @@ export default {
 
       // 重置图表数据
       this.chartData.timeData = []
-      this.chartData.rateBpsData = []
+      // this.chartData.rateBpsData = []
       this.chartData.avgBpsData = []
       this.chartData.maxBpsData = []
 
-      let totalRateBps = 0
+      // let totalRateBps = 0
       let totalAvgBps = 0
-      let maxRateBps = 0
+      // let maxRateBps = 0
       let maxAvgBps = 0
       let maxMaxBps = 0
-      let avgBpsCount = 0
-      let maxBpsCount = 0
+      // let avgBpsCount = 0
+      // let maxBpsCount = 0
 
       results.forEach(item => {
-        const rateBps = item.rate_bps || 0
+        // const rateBps = item.rate_bps || 0
         const avgBps = item.avg_bps || null
         const maxBps = item.max_bps || null
 
         this.chartData.timeData.push(item.ts_ms)
-        this.chartData.rateBpsData.push(rateBps)
+        // this.chartData.rateBpsData.push(rateBps)
         this.chartData.avgBpsData.push(avgBps)
         this.chartData.maxBpsData.push(maxBps)
 
-        totalRateBps += rateBps
-        maxRateBps = Math.max(maxRateBps, rateBps)
+        // totalRateBps += rateBps
+        // maxRateBps = Math.max(maxRateBps, maxBps)
 
         if (avgBps !== null) {
           totalAvgBps += avgBps
-          avgBpsCount++
+          // avgBpsCount++
           maxAvgBps = Math.max(maxAvgBps, avgBps)
         }
 
         if (maxBps !== null) {
-          maxBpsCount++
+          // maxBpsCount++
           maxMaxBps = Math.max(maxMaxBps, maxBps)
         }
       })
@@ -240,9 +240,9 @@ export default {
       // 计算统计信息
       const count = results.length
       this.statistics = {
-        avgRateBps: count > 0 ? Math.round(totalRateBps / count) : 0,
-        peakRateBps: maxRateBps,
-        avgAvgBps: avgBpsCount > 0 ? Math.round(totalAvgBps / avgBpsCount) : 0,
+        // avgRateBps: count > 0 ? Math.round(totalRateBps / count) : 0,
+        // peakRateBps: maxRateBps,
+        avgAvgBps: count > 0 ? Math.round(totalAvgBps / count) : 0,
         peakMaxBps: maxMaxBps
       }
     },
@@ -255,7 +255,7 @@ export default {
             data: this.chartData.timeData
           },
           series: [
-            { data: this.chartData.rateBpsData },
+            // { data: this.chartData.rateBpsData },
             { data: this.chartData.avgBpsData },
             { data: this.chartData.maxBpsData }
           ]
@@ -277,14 +277,14 @@ export default {
       this.setDefaultTimeRange()
       // 重置后清空图表和统计数据
       this.statistics = {
-        avgRateBps: 0,
-        peakRateBps: 0,
+        // avgRateBps: 0,
+        // peakRateBps: 0,
         avgAvgBps: 0,
         peakMaxBps: 0
       }
       this.chartData = {
         timeData: [],
-        rateBpsData: [],
+        // rateBpsData: [],
         avgBpsData: [],
         maxBpsData: []
       }
@@ -301,9 +301,6 @@ export default {
         },
         tooltip: {
           trigger: 'axis',
-          axisPointer: {
-            type: 'cross'
-          },
           formatter: (params) => {
             const timeStr = this.formatTime(params[0].axisValue)
             let tooltip = `时间: ${timeStr}<br/>`
@@ -317,7 +314,8 @@ export default {
           }
         },
         legend: {
-          data: ['当前流量(bps)', '平均流量(bps)', '最大流量(bps)'],
+          data: ['平均流量(bps)', '最大流量(bps)'],
+          // data: ['当前流量(bps)', '平均流量(bps)', '最大流量(bps)'],
           top: 10
         },
         grid: {
@@ -348,33 +346,33 @@ export default {
           }
         ],
         series: [
-          {
-            name: '当前流量(bps)',
-            type: 'line',
-            yAxisIndex: 0,
-            data: this.chartData.rateBpsData,
-            smooth: true,
-            symbol: 'circle',
-            symbolSize: 4,
-            lineStyle: {
-              color: '#409EFF',
-              width: 2
-            },
-            areaStyle: {
-              color: {
-                type: 'linear',
-                x: 0,
-                y: 0,
-                x2: 0,
-                y2: 1,
-                colorStops: [{
-                  offset: 0, color: 'rgba(64, 158, 255, 0.3)'
-                }, {
-                  offset: 1, color: 'rgba(64, 158, 255, 0.1)'
-                }]
-              }
-            }
-          },
+          // {
+          //   name: '当前流量(bps)',
+          //   type: 'line',
+          //   yAxisIndex: 0,
+          //   data: this.chartData.rateBpsData,
+          //   smooth: true,
+          //   symbol: 'circle',
+          //   symbolSize: 4,
+          //   lineStyle: {
+          //     color: '#409EFF',
+          //     width: 2
+          //   },
+          //   // areaStyle: {
+          //   //   color: {
+          //   //     type: 'linear',
+          //   //     x: 0,
+          //   //     y: 0,
+          //   //     x2: 0,
+          //   //     y2: 1,
+          //   //     colorStops: [{
+          //   //       offset: 0, color: 'rgba(64, 158, 255, 0.3)'
+          //   //     }, {
+          //   //       offset: 1, color: 'rgba(64, 158, 255, 0.1)'
+          //   //     }]
+          //   //   }
+          //   // }
+          // },
           {
             name: '平均流量(bps)',
             type: 'line',
@@ -425,7 +423,17 @@ export default {
 
     // 格式化时间
     formatTime(timestamp, format = 'yyyy-MM-dd HH:mm:ss') {
-      const date = new Date(timestamp)
+      if (!timestamp || isNaN(timestamp)) {
+        return '--:--:--'
+      }
+      
+      const date = new Date(parseInt(timestamp))
+      
+      // 检查日期是否有效
+      if (isNaN(date.getTime())) {
+        return '--:--:--'
+      }
+      
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')

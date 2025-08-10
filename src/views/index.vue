@@ -64,7 +64,7 @@ export default {
       getCPUData({
         dataSourceId: 0,
       }).then(response => {
-        console.log(response)
+        
         if (response.body.length > 0) {
           var cpuUS = parseInt(response.body[0].cpuUS)
           var ramUS = parseInt(response.body[0].ramUS * 100)

@@ -23,7 +23,7 @@
                 <el-col :span="8">
                     <el-card>
                         <div class="status-card">
-                            <div class="status-value">{{ latestData.rate_bps || 0 }}</div>
+                            <div class="status-value">{{ formatBytes(latestData.rate_bps || 0) }}</div>
                             <div class="status-label">当前流量 (bps)</div>
                         </div>
                     </el-card>
@@ -31,15 +31,15 @@
                 <el-col :span="8">
                     <el-card>
                         <div class="status-card">
-                            <div class="status-value">{{ latestData.avg_bps || 0 }}</div>
-                            <div class="status-label">平均流量 (bps)</div>
+                            <div class="status-value">{{ formatBytes(avgRateBps5Min) }}</div>
+                            <div class="status-label">5分钟平均流量 (bps)</div>
                         </div>
                     </el-card>
                 </el-col>
                 <el-col :span="8">
                     <el-card>
                         <div class="status-card">
-                            <div class="status-value">{{ maxRateBps }}</div>
+                            <div class="status-value">{{ formatBytes(maxRateBps) }}</div>
                             <div class="status-label">5分钟峰值 (bps)</div>
                         </div>
                     </el-card>
@@ -91,6 +91,7 @@ export default {
             },
             latestData: {}, // 最新的一条数据
             maxRateBps: 0, // 5分钟内的峰值
+            avgRateBps5Min: 0, // 5分钟内的平均流量
             lastUpdateTime: ''
         }
     },
@@ -116,9 +117,6 @@ export default {
                 },
                 tooltip: {
                     trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    },
                     formatter: (params) => {
                         const timeStr = this.formatTime(params[0].axisValue)
                         let tooltip = `时间: ${timeStr}<br/>`
@@ -130,7 +128,8 @@ export default {
                     }
                 },
                 legend: {
-                    data: ['当前流量(bps)', '平均流量(bps)'],
+                    data: ['当前流量(bps)'],
+                    // data: ['当前流量(bps)', '平均流量(bps)'],
                     top: 10
                 },
                 grid: {
@@ -173,34 +172,34 @@ export default {
                             color: '#409EFF',
                             width: 2
                         },
-                        areaStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0,
-                                y: 0,
-                                x2: 0,
-                                y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: 'rgba(64, 158, 255, 0.3)'
-                                }, {
-                                    offset: 1, color: 'rgba(64, 158, 255, 0.1)'
-                                }]
-                            }
-                        }
+                        // areaStyle: {
+                        //     color: {
+                        //         type: 'linear',
+                        //         x: 0,
+                        //         y: 0,
+                        //         x2: 0,
+                        //         y2: 1,
+                        //         colorStops: [{
+                        //             offset: 0, color: 'rgba(64, 158, 255, 0.3)'
+                        //         }, {
+                        //             offset: 1, color: 'rgba(64, 158, 255, 0.1)'
+                        //         }]
+                        //     }
+                        // }
                     },
-                    {
-                        name: '平均流量(bps)',
-                        type: 'line',
-                        yAxisIndex: 0,
-                        data: this.chartData.avgBpsData,
-                        smooth: true,
-                        symbol: 'circle',
-                        symbolSize: 4,
-                        lineStyle: {
-                            color: '#67C23A',
-                            width: 2
-                        }
-                    }
+                    // {
+                    //     name: '平均流量(bps)',
+                    //     type: 'line',
+                    //     yAxisIndex: 0,
+                    //     data: this.chartData.avgBpsData,
+                    //     smooth: true,
+                    //     symbol: 'circle',
+                    //     symbolSize: 4,
+                    //     lineStyle: {
+                    //         color: '#67C23A',
+                    //         width: 2
+                    //     }
+                    // }
                 ]
             }
 
@@ -216,7 +215,7 @@ export default {
         async loadInitialData() {
             // 如果没有输入IP地址，不进行查询
             if (!this.queryParams.ip) {
-                this.$message.warning('请输入IP地址进行查询')
+                // this.$message.warning('请输入IP地址进行查询')
                 return
             }
 
@@ -232,8 +231,8 @@ export default {
                         end: endTime
                     },
                     page: {
-                        pageNo: 0, // 全量查询
-                        // pageSize: 10 // 全量查询
+                        // pageNo: 0, // 全量查询
+                        pageSize: 0 // 全量查询
                     }
                 }
 
@@ -241,7 +240,7 @@ export default {
                 if (response.code === '000000' && response.body.results) {
                     this.processInitialData(response.body.results)
                     this.updateChart()
-                    console.log(response)
+                    
                 } else {
                     this.$message.error('获取数据失败')
                 }
@@ -259,16 +258,24 @@ export default {
             this.chartData.rateBpsData = []
             this.chartData.avgBpsData = []
 
+            let totalRateBps = 0 // 用于计算5分钟平均流量
+
             results.forEach(item => {
                 this.chartData.timeData.push(item.ts_ms)
                 this.chartData.rateBpsData.push(item.rate_bps || 0)
                 this.chartData.avgBpsData.push(item.avg_bps || 0)
+                
+                totalRateBps += (item.rate_bps || 0) // 累加用于计算平均值
             })
 
-            // 更新最新数据和峰值
+            // 更新最新数据和统计数据
             if (results.length > 0) {
                 this.latestData = results[results.length - 1]
                 this.maxRateBps = Math.max(...this.chartData.rateBpsData)
+                // 计算5分钟内的平均流量
+                this.avgRateBps5Min = Math.round(totalRateBps / results.length)
+            } else {
+                this.avgRateBps5Min = 0
             }
 
             this.lastUpdateTime = this.formatTime(Date.now())
@@ -292,7 +299,7 @@ export default {
         // 应用筛选
         handleQuery() {
             if (!this.queryForm.ip) {
-                this.$message.warning('请输入IP地址')
+                // this.$message.warning('请输入IP地址')
                 return
             }
             this.queryParams.ip = this.queryForm.ip
@@ -306,7 +313,7 @@ export default {
             this.stopAutoUpdate() // 先清理已有的定时器
             this.timer = setInterval(() => {
                 this.loadInitialData()
-            }, 1000) // 每秒更新一次
+            }, 10000) // 每秒更新一次
         },
 
         // 停止自动更新
@@ -334,6 +341,7 @@ export default {
             }
             this.latestData = {}
             this.maxRateBps = 0
+            this.avgRateBps5Min = 0
             this.updateChart()
         },
 
@@ -348,7 +356,17 @@ export default {
 
         // 格式化时间
         formatTime(timestamp, format = 'yyyy-MM-dd HH:mm:ss') {
-            const date = new Date(timestamp)
+            if (!timestamp || isNaN(timestamp)) {
+                return '--:--:--'
+            }
+            
+            const date = new Date(parseInt(timestamp))
+            
+            // 检查日期是否有效
+            if (isNaN(date.getTime())) {
+                return '--:--:--'
+            }
+            
             const year = date.getFullYear()
             const month = String(date.getMonth() + 1).padStart(2, '0')
             const day = String(date.getDate()).padStart(2, '0')

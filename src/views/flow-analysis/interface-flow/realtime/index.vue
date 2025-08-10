@@ -24,7 +24,7 @@
                 <el-col :span="8">
                     <el-card>
                         <div class="status-card">
-                            <div class="status-value">{{ latestData.rate_bps || 0 }}</div>
+                            <div class="status-value">{{ formatBytes(latestData.rate_bps || 0) }}</div>
                             <div class="status-label">当前流量 (bps)</div>
                         </div>
                     </el-card>
@@ -32,7 +32,7 @@
                 <el-col :span="8">
                     <el-card>
                         <div class="status-card">
-                            <div class="status-value">{{ latestData.pps || 0 }}</div>
+                            <div class="status-value">{{ formatPps(latestData.pps || 0) }}</div>
                             <div class="status-label">当前包量 (pps)</div>
                         </div>
                     </el-card>
@@ -40,7 +40,7 @@
                 <el-col :span="8">
                     <el-card>
                         <div class="status-card">
-                            <div class="status-value">{{ maxRateBps }}</div>
+                            <div class="status-value">{{ formatBytes(maxRateBps) }}</div>
                             <div class="status-label">5分钟峰值 (bps)</div>
                         </div>
                     </el-card>
@@ -119,16 +119,13 @@ export default {
                 },
                 tooltip: {
                     trigger: 'axis',
-                    axisPointer: {
-                        type: 'cross'
-                    },
                     formatter: (params) => {
                         const timeStr = this.formatTime(params[0].axisValue)
                         let tooltip = `时间: ${timeStr}<br/>`
                         params.forEach(param => {
                             const value = param.seriesName === '流量(bps)'
                                 ? this.formatBytes(param.value)
-                                : param.value.toLocaleString()
+                                : this.formatPps(param.value)
                             tooltip += `${param.marker} ${param.seriesName}: ${value}<br/>`
                         })
                         return tooltip
@@ -169,7 +166,7 @@ export default {
                         name: '包量(pps)',
                         position: 'right',
                         axisLabel: {
-                            formatter: (value) => value.toLocaleString()
+                            formatter: (value) => this.formatPps(value)
                         }
                     }
                 ],
@@ -186,20 +183,20 @@ export default {
                             color: '#409EFF',
                             width: 2
                         },
-                        areaStyle: {
-                            color: {
-                                type: 'linear',
-                                x: 0,
-                                y: 0,
-                                x2: 0,
-                                y2: 1,
-                                colorStops: [{
-                                    offset: 0, color: 'rgba(64, 158, 255, 0.3)'
-                                }, {
-                                    offset: 1, color: 'rgba(64, 158, 255, 0.1)'
-                                }]
-                            }
-                        }
+                        // areaStyle: {
+                        //     color: {
+                        //         type: 'linear',
+                        //         x: 0,
+                        //         y: 0,
+                        //         x2: 0,
+                        //         y2: 1,
+                        //         colorStops: [{
+                        //             offset: 0, color: 'rgba(64, 158, 255, 0.3)'
+                        //         }, {
+                        //             offset: 1, color: 'rgba(64, 158, 255, 0.1)'
+                        //         }]
+                        //     }
+                        // }
                     },
                     {
                         name: '包量(pps)',
@@ -238,8 +235,7 @@ export default {
                         end: endTime
                     },
                     page: {
-                        pageNo: 0, // 全量查询
-                        // pageSize: 10 // 全量查询
+                        pageSize: 0, // 全量查询
                     }
                 }
 
@@ -255,7 +251,7 @@ export default {
                 if (response.code === '000000' && response.body.results) {
                     this.processInitialData(response.body.results)
                     this.updateChart()
-                    console.log(response)
+                    
                 } else {
                     this.$message.error('获取数据失败')
                 }
@@ -350,9 +346,28 @@ export default {
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
         },
 
+        // 格式化包量数
+        formatPps(pps) {
+            if (pps === 0) return '0'
+            const k = 1000
+            const sizes = ['', 'K', 'M', 'G', 'T']
+            const i = Math.floor(Math.log(pps) / Math.log(k))
+            return parseFloat((pps / Math.pow(k, i)).toFixed(2)) + sizes[i]
+        },
+
         // 格式化时间
         formatTime(timestamp, format = 'yyyy-MM-dd HH:mm:ss') {
-            const date = new Date(timestamp)
+            if (!timestamp || isNaN(timestamp)) {
+                return '--:--:--'
+            }
+            
+            const date = new Date(parseInt(timestamp))
+            
+            // 检查日期是否有效
+            if (isNaN(date.getTime())) {
+                return '--:--:--'
+            }
+            
             const year = date.getFullYear()
             const month = String(date.getMonth() + 1).padStart(2, '0')
             const day = String(date.getDate()).padStart(2, '0')
