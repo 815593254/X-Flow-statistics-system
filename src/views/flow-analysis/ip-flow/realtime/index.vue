@@ -64,12 +64,55 @@
                 </el-col>
             </el-row>
         </el-card>
+
+        <!-- C段IP排名列表 -->
+        <el-card v-if="currentCClass" style="margin-top: 10px;" v-loading="cClassRankLoading" element-loading-text="加载中..." element-loading-spinner="el-icon-loading">
+            <div slot="header" class="card-header">
+                <span>{{ currentCClass }} C段内IP流量排名</span>
+                <el-button type="text" @click="refreshCClassData" :loading="cclassLoading">
+                    <i class="el-icon-refresh"></i>
+                </el-button>
+            </div>
+            
+            <el-row :gutter="20">
+                <el-col :span="24">
+                    <div class="cclass-ranking-list">
+                        <div 
+                            v-for="(item, index) in cclassIpList" 
+                            :key="index"
+                            class="cclass-ranking-item"
+                            @click="switchToIp(item.ip)"
+                        >
+                            <div class="rank-number" :class="getCClassRankClass(index + 1)">
+                                #{{ index + 1 }}
+                            </div>
+                            <div class="ip-info">
+                                <div class="ip-address">{{ item.ip }}</div>
+                                <div class="flow-stats">
+                                    <span class="current-flow">当前: {{ formatBytes(item.rate_bps) }}</span>
+                                    <span class="avg-flow">平均: {{ formatBytes(item.avg_bps) }}</span>
+                                    <span class="max-flow">峰值: {{ formatBytes(item.max_bps) }}</span>
+                                </div>
+                            </div>
+                            <div class="timestamp">
+                                {{ formatTime(item.ts_ms, 'HH:mm:ss') }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div v-if="cclassIpList.length === 0 && !cclassLoading" class="no-data">
+                        该C段暂无流量数据
+                    </div>
+                </el-col>
+            </el-row>
+        </el-card>
     </div>
 </template>
 
 <script>
 import { request } from '@/utils/request'
 import { getIpFlowApi } from '@/api/flow-analysis/ip-flow'
+import { getCClassIpTop } from '@/api/flow-analysis/cclass-ip'
 
 export default {
     name: 'IpFlowRealtime',
@@ -92,19 +135,36 @@ export default {
             latestData: {}, // 最新的一条数据
             maxRateBps: 0, // 5分钟内的峰值
             avgRateBps5Min: 0, // 5分钟内的平均流量
-            lastUpdateTime: ''
+            lastUpdateTime: '',
+            // C段相关数据
+            currentCClass: '', // 当前查看的C段
+            cclassIpList: [], // C段内IP排名列表
+            cclassLoading: false // C段数据加载状态
         }
     },
     mounted() {
-        // 检查路由参数中是否有IP
+        // 检查路由参数中是否有IP或C段
         if (this.$route.query.ip) {
             this.queryForm.ip = this.$route.query.ip
             this.queryParams.ip = this.$route.query.ip
         }
         
+        if (this.$route.query.cclass) {
+            this.currentCClass = this.$route.query.cclass
+            // 如果是C段，也设置到IP查询框中（去掉/24后缀）
+            const baseIp = this.$route.query.cclass.split('/')[0]
+            this.queryForm.ip = baseIp
+            this.queryParams.ip = baseIp
+        }
+        
         this.initChart()
         this.loadInitialData()
         this.startAutoUpdate()
+        
+        // 如果有C段参数，加载C段IP排名
+        if (this.currentCClass) {
+            this.loadCClassData()
+        }
     },
     watch: {
         // 监听路由变化，更新IP参数
@@ -112,8 +172,21 @@ export default {
             if (to.query.ip && to.query.ip !== this.queryParams.ip) {
                 this.queryForm.ip = to.query.ip
                 this.queryParams.ip = to.query.ip
+                this.currentCClass = '' // 清除C段状态
+                this.cclassIpList = [] // 清除C段列表
                 // 如果IP改变了，重新加载数据
                 this.loadInitialData()
+            }
+            
+            if (to.query.cclass && to.query.cclass !== this.currentCClass) {
+                this.currentCClass = to.query.cclass
+                // 如果是C段，设置基础IP到查询框
+                const baseIp = to.query.cclass.split('/')[0]
+                this.queryForm.ip = baseIp
+                this.queryParams.ip = baseIp
+                // 重新加载数据
+                this.loadInitialData()
+                this.loadCClassData()
             }
         }
     },
@@ -395,6 +468,82 @@ export default {
                 return `${hours}:${minutes}:${seconds}`
             }
             return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+        },
+
+        // C段排名相关方法
+        async loadCClassData() {
+            if (!this.currentCClass) {
+                return
+            }
+
+            try {
+                this.cClassRankLoading = true
+                
+                // 构建时间范围，获取最近5分钟的数据
+                const endTime = Date.now()
+                const startTime = endTime - 5 * 60 * 1000
+
+                const data = {
+                    ip: this.currentCClass,
+                    condition: {
+                        begin: startTime,
+                        end: endTime
+                    },
+                    page: {
+                        pageSize: 0 // 显示TOP10
+                    }
+                }
+
+                const response = await getCClassIpTop(data)
+                
+                if (response.code === '000000' && response.body && response.body.results) {
+                    this.cClassRankData = response.body.results
+                } else {
+                    this.cClassRankData = []
+                    console.warn('获取C段排名数据失败:', response.msg)
+                }
+            } catch (error) {
+                console.error('加载C段排名数据失败:', error)
+                this.cClassRankData = []
+            } finally {
+                this.cClassRankLoading = false
+            }
+        },
+
+        // 刷新C段排名数据
+        refreshCClassData() {
+            if (this.cClassRankTimer) {
+                clearInterval(this.cClassRankTimer)
+            }
+            
+            if (this.currentCClass) {
+                this.loadCClassData()
+                // 每30秒刷新一次C段排名
+                this.cClassRankTimer = setInterval(() => {
+                    this.loadCClassData()
+                }, 30000)
+            }
+        },
+
+        // 点击C段排名中的IP，切换到该IP的流量查看
+        switchToIp(ip) {
+            // 更新路由参数，切换到新的IP
+            this.$router.push({
+                path: this.$route.path,
+                query: {
+                    ...this.$route.query,
+                    ip: ip,
+                    cclass: '' // 清除C段参数，显示单个IP的流量
+                }
+            })
+        },
+
+        // 获取排名样式类名
+        getCClassRankClass(index) {
+            if (index === 0) return 'rank-first'
+            if (index === 1) return 'rank-second'
+            if (index === 2) return 'rank-third'
+            return 'rank-normal'
         }
     }
 }
@@ -426,6 +575,157 @@ export default {
     /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
 }
 
+/* C段排名相关样式 */
+.cclass-rank-container {
+    background: #fff;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cclass-rank-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ebeef5;
+}
+
+.cclass-rank-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #303133;
+}
+
+.cclass-rank-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.cclass-rank-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f7fa;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.cclass-rank-item:hover {
+    background-color: #f8f9fa;
+}
+
+.cclass-rank-item:last-child {
+    border-bottom: none;
+}
+
+.rank-number {
+    width: 40px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-radius: 4px;
+    margin-right: 12px;
+    font-size: 14px;
+}
+
+.rank-first .rank-number {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #b8860b;
+}
+
+.rank-second .rank-number {
+    background: linear-gradient(135deg, #c0c0c0, #e5e5e5);
+    color: #696969;
+}
+
+.rank-third .rank-number {
+    background: linear-gradient(135deg, #cd7f32, #daa520);
+    color: #8b4513;
+}
+
+.rank-normal .rank-number {
+    background: #f5f7fa;
+    color: #909399;
+}
+
+.ip-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ip-address {
+    font-size: 14px;
+    font-weight: 500;
+    color: #409eff;
+    margin-bottom: 4px;
+    word-break: break-all;
+}
+
+.flow-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #909399;
+}
+
+.current-flow {
+    color: #e6a23c;
+}
+
+.avg-flow {
+    color: #67c23a;
+}
+
+.max-flow {
+    color: #f56c6c;
+}
+
+.update-time {
+    text-align: right;
+    font-size: 12px;
+    color: #c0c4cc;
+    min-width: 80px;
+}
+
+/* 空状态样式 */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #909399;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .cclass-rank-item {
+        flex-wrap: wrap;
+    }
+    
+    .flow-stats {
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+        margin-top: 8px;
+    }
+    
+    .update-time {
+        width: 100%;
+        text-align: left;
+        margin-top: 4px;
+    }
+}
+</style>
+
 .status-value {
     font-size: 24px;
     font-weight: bold;
@@ -447,23 +747,3 @@ export default {
     border-radius: 4px;
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-}
-
-.chart-title {
-    font-size: 16px;
-    font-weight: bold;
-    color: #333;
-}
-
-.chart-info {
-    font-size: 12px;
-    color: #999;
-}
-</style>

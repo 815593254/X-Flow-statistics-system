@@ -151,9 +151,20 @@ export default {
     
     // 跳转到IP实时流量页面
     navigateToIpFlow(ip) {
+      const query = {}
+      
+      // 判断是否为C段格式（包含/24等）
+      if (ip.includes('/')) {
+        // C段格式，传递cclass参数
+        query.cclass = ip
+      } else {
+        // 单个IP，传递ip参数
+        query.ip = ip
+      }
+      
       this.$router.push({
         path: '/flow-analysis/ip-flow/realtime',
-        query: { ip: ip }
+        query: query
       })
     },
     
