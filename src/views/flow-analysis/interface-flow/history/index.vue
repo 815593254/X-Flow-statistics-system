@@ -62,7 +62,7 @@
       </el-row>
     </el-card>
 
-    <el-card style="margin-top: 10px;">
+    <el-card style="margin-top: 10px;" v-loading="loading" element-loading-text="加载中..." element-loading-spinner="el-icon-loading">
       <el-row :gutter="20">
         <el-col :span="24">
           <div class="chart-wrapper">
@@ -85,7 +85,7 @@ export default {
       loading: false,
       chart: null,
       queryParams: {
-        hostName: '',
+        hostName: 'localhost.localdomain',
         interfaceName: '',
         dateRange: []
       },

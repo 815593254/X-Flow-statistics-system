@@ -50,16 +50,24 @@ const accountRouter = [
         component: () => import('@/views/flow-analysis/ip-flow/index'),
         name: 'IpFlow',
         disabled: false,
-        meta: { title: 'IP流量', activeMenu: '/flow-analysis/ip-flow', number: '1-2', permission: [{ title: '实时流量', number: '1-2-1' }, { title: '历史流量', number: '1-2-2' }] },
-        redirect: '/flow-analysis/ip-flow/realtime',
+        meta: { title: 'IP流量', activeMenu: '/flow-analysis/ip-flow', number: '1-2', permission: [{ title: 'Top20 流量', number: '1-2-1' }, { title: '实时流量', number: '1-2-2' }, { title: '历史流量', number: '1-2-3' }] },
+        redirect: '/flow-analysis/ip-flow/top20',
         // children_count: 2,
         children: [
+          // top20流量
+          {
+            path: 'top20',
+            component: () => import('@/views/flow-analysis/ip-flow/top20/index'),
+            name: 'IpFlowTop20',
+            meta: { title: 'Top20 流量', label: 'top20', activeMenu: '/flow-analysis/ip-flow', number: '1-2-1', },
+            hidden: true,
+          },
           // 实时流量
           {
             path: 'realtime',
             component: () => import('@/views/flow-analysis/ip-flow/realtime/index'),
             name: 'IpFlowRealtime',
-            meta: { title: '实时流量', label: 'realtime', activeMenu: '/flow-analysis/ip-flow', number: '1-2-1', },
+            meta: { title: '实时流量', label: 'realtime', activeMenu: '/flow-analysis/ip-flow', number: '1-2-2', },
             hidden: true,
           },
           // 历史流量
@@ -67,13 +75,15 @@ const accountRouter = [
             path: 'history',
             component: () => import('@/views/flow-analysis/ip-flow/history/index'),
             name: 'IpFlowHistory',
-            meta: { title: '历史流量', label: 'history', activeMenu: '/flow-analysis/ip-flow', number: '1-2-2', },
+            meta: { title: '历史流量', label: 'history', activeMenu: '/flow-analysis/ip-flow', number: '1-2-3', },
             hidden: true,
           },
         ]
       },
     ],
   },
+
+  // 手动抓包
   {
     path: '/manual-capture',
     component: Layout,
@@ -93,6 +103,7 @@ const accountRouter = [
     ],
   },
 
+  // 流量告警
   {
     path: '/report-exigence',
     component: Layout,
@@ -113,6 +124,25 @@ const accountRouter = [
   },
 
 
+  // 告警阈值配置
+  {
+    path: '/alert-threshold',
+    component: Layout,
+    name: '',
+    disabled: false,
+    meta: { title: '告警阈值配置', icon: 'el-icon-bell', number: '6' },
+    children_count: 1,
+    children: [
+      //  告警阈值配置
+      {
+        path: '',
+        component: () => import('@/views/alert-threshold/index'),
+        name: 'alertThreshold',
+        disabled: false,
+        meta: { title: '告警阈值配置', activeMenu: '/alert-threshold', number: '6', permission: [{ title: '查看', number: '6-1-see' }, { title: '修改', number: '6-1-edit' }] }
+      },
+    ],
+  },
 
 
   // 用户管理

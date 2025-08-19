@@ -19,7 +19,10 @@
             <i class="el-icon-delete"></i>
           </el-tooltip>
         </div>
-        <div class="icon-button refresh-button" @click="refresh">
+        <div class="icon-button">
+          <el-button @click="goToAlertThreshold">设置阈值</el-button>
+        </div>
+        <div class="icon-button" @click="refresh">
           <el-tooltip class="item" effect="dark" content="刷新" placement="top-start">
             <i class="el-icon-refresh"></i>
           </el-tooltip>
@@ -32,24 +35,27 @@
         element-loading-text="加载中，请稍后..." element-loading-spinner="el-icon-loading" :data="tbParam.tableData" border
         style="width: 100%" tooltip-effect="lights" header-cell-class-name="header-row"
         :empty-text="isLoading ? ' ' : ''" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="40"> </el-table-column>
-        <el-table-column type="index" label="序号" width="50">
+        <el-table-column type="selection" min-width="40"> </el-table-column>
+        <el-table-column type="index" label="序号" min-width="50">
         </el-table-column>
-        <el-table-column prop="ip" label="IP地址" width="150">
+        <el-table-column prop="ip" label="IP地址" min-width="150">
         </el-table-column>
-        <el-table-column prop="rateBps" label="IP流量" width="150">
+        <el-table-column prop="rate_bps" label="IP流量" min-width="150">
+          <template slot-scope="{ row }">
+            {{ formatBps(row.rate_bps) }}
+          </template>
         </el-table-column>
-        <el-table-column prop="file" label="抓包文件地址" width="500">
+        <el-table-column prop="file" label="抓包文件地址" min-width="500">
           <template slot-scope="{ row }">
             {{ urlHead }}{{ row.file }}.pcap
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180">
+        <el-table-column prop="createTime" label="创建时间" min-width="180">
           <template slot-scope="{ row }">
             {{ parseTime(row.createTime, "{y}-{m}-{d} {h}:{i}:{s}") }}
           </template>
         </el-table-column>
-        <el-table-column :label="$t('common.operation')" width="220">
+        <el-table-column :label="$t('common.operation')" min-width="220" fixed="right">
           <template slot-scope="{ row }">
             <div class="table-button">
               <span v-permission="'1-5-delete'" class="icon-button">
@@ -87,7 +93,7 @@
           {{ formData.ip }}
         </el-form-item>
         <el-form-item label="IP流量：" prop="ip">
-          {{ formData.rateBps }}
+          {{ formatBps(formData.rateBps) }}
         </el-form-item>
         <el-form-item label="抓包文件地址：" prop="ip">
           {{ urlHead }}{{ formData.file }}.pcap
@@ -185,8 +191,8 @@ export default {
       }
     },
 
-    downFile() {
-      let file = this.urlHead + this.formData.file + ".pcap";
+    downFile(row) {
+      let file = this.urlHead + row.file + ".pcap";
       window.open(file, "_blank");
     },
 
@@ -306,6 +312,24 @@ export default {
         message: "查询成功",
       });
     },
+    goToAlertThreshold() {
+      this.$router.push({ path: '/alert-threshold' });
+    }
+    ,
+    // 格式化 bps 显示
+    formatBps(bps) {
+      if (bps === null || bps === undefined) return '0 bps'
+      const val = Number(bps)
+      if (!isFinite(val)) return bps
+      if (val >= 1000000000) {
+        return (val / 1000000000).toFixed(2) + ' Gbps'
+      } else if (val >= 1000000) {
+        return (val / 1000000).toFixed(2) + ' Mbps'
+      } else if (val >= 1000) {
+        return (val / 1000).toFixed(2) + ' Kbps'
+      }
+      return val.toFixed(0) + ' bps'
+    }
   },
 };
 </script>

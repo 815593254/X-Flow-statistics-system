@@ -58,7 +58,7 @@
       </el-row>
     </el-card>
 
-    <el-card style="margin-top: 10px;">
+    <el-card style="margin-top: 10px;" v-loading="loading" element-loading-text="加载中..." element-loading-spinner="el-icon-loading">
       <el-row :gutter="20">
         <el-col :span="24">
           <div class="chart-wrapper">
@@ -106,9 +106,25 @@ export default {
     }
   },
   mounted() {
+    // 检查路由参数中是否有IP
+    if (this.$route.query.ip) {
+      this.queryParams.ip = this.$route.query.ip
+    }
+    
     // 设置默认时间范围为最近24小时
     this.setDefaultTimeRange()
     this.initCharts()
+    this.loadData()
+  },
+  watch: {
+    // 监听路由变化，更新IP参数
+    '$route'(to, from) {
+      if (to.query.ip && to.query.ip !== this.queryParams.ip) {
+        this.queryParams.ip = to.query.ip
+        // 如果IP改变了，重新加载数据
+        this.loadData()
+      }
+    }
   },
   beforeDestroy() {
     if (this.chart) {
@@ -139,10 +155,6 @@ export default {
 
     // 加载数据
     async loadData() {
-      if (!this.queryParams.ip) {
-        this.$message.warning('请输入IP地址')
-        return
-      }
 
       if (!this.queryParams.dateRange || this.queryParams.dateRange.length !== 2) {
         this.$message.warning('请选择时间范围')

@@ -124,10 +124,10 @@ coverage/
 # Jest
 jest_*
 
-# Lock files (uncomment if you want to ignore them)
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# Keep lock files in repo (recommended)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
 
 # Build outputs
 build/
@@ -171,3 +171,19 @@ tests/e2e/reports
 # Application specific
 接口文档/temp/
 接口文档/*.tmp
+
+# IDE/editor
+*.sublime-project
+*.sublime-workspace
+
+# Archive files
+*.7z
+*.zip
+*.tar.gz
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Windows thumbnail cache files
+Thumbs.db

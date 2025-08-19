@@ -38,40 +38,31 @@
     </el-row>
     <div class="host-table">
       <!-- 表格 -->
-      <el-table
-        v-loading="isLoading"
-        element-loading-background="rgba(255, 255, 255, .0)"
-        element-loading-text="加载中，请稍后..."
-        element-loading-spinner="el-icon-loading"
-        :data="tbParam.tableData"
-        border
-        style="width: 100%"
-        tooltip-effect="lights"
-        header-cell-class-name="header-row"
-        :empty-text="isLoading?' ':''"
-        @selection-change="handleSelectionChange"
-      >
-        <el-table-column type="selection" width="40"> </el-table-column>
-        <el-table-column type="index" label="序号" width="50"> </el-table-column>
-        <el-table-column prop="ip" label="抓包IP" width="150"> </el-table-column>
-        <el-table-column prop="file" label="抓包文件地址" width="500"></el-table-column>
-        <el-table-column prop="captureRes" label="抓包状态" width="120">
+      <el-table v-loading="isLoading" element-loading-background="rgba(255, 255, 255, .0)"
+        element-loading-text="加载中，请稍后..." element-loading-spinner="el-icon-loading" :data="tbParam.tableData" border
+        style="width: 100%" tooltip-effect="lights" header-cell-class-name="header-row"
+        :empty-text="isLoading ? ' ' : ''" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" min-width="40"> </el-table-column>
+        <el-table-column type="index" label="序号" min-width="50"> </el-table-column>
+        <el-table-column prop="ip" label="抓包IP" min-width="150"> </el-table-column>
+        <el-table-column prop="file" label="抓包文件地址" min-width="500"></el-table-column>
+        <el-table-column prop="captureRes" label="抓包状态" min-width="120">
           <template slot-scope="{row}">
-            {{ row.captureRes == 0? '未完成':'已完成' }}
+            {{ row.captureRes == 0 ? '未完成' : '已完成' }}
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="抓包时间" width="180">
+        <el-table-column prop="createTime" label="抓包时间" min-width="180">
           <template slot-scope="{row}">
             {{ parseTime(row.createTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
           </template>
         </el-table-column>
-        <el-table-column prop="updateTime" label="更新时间" width="180">
+        <el-table-column prop="updateTime" label="更新时间" min-width="180">
           <template slot-scope="{row}">
             {{ parseTime(row.updateTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
           </template>
         </el-table-column>
 
-        <el-table-column :label="$t('common.operation')" width="220">
+        <el-table-column :label="$t('common.operation')" min-width="220" fixed="right">
           <template slot-scope="{row}">
             <div class="table-button">
               <!-- <span v-permission="'1-4-edit'" class="icon-button">
@@ -89,15 +80,9 @@
       </el-table>
       <!-- 分页 -->
       <div class="pagination-content">
-        <el-pagination
-          :current-page.sync="tbParam.currentPage"
-          :page-sizes="[20, 50, 100]"
-          :page-size="tbParam.pageSize"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="tbParam.total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+        <el-pagination :current-page.sync="tbParam.currentPage" :page-sizes="[20, 50, 100]"
+          :page-size="tbParam.pageSize" layout="total, sizes, prev, pager, next, jumper" :total="tbParam.total"
+          @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </div>
     <!--新增编辑弹窗-->
@@ -112,7 +97,8 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button size="small" @click="dialogVisible = false">取 消</el-button>
-        <el-button type="primary" size="small" :loading="isaddLoading" @click="submitForm('addFormData')">确 定</el-button>
+        <el-button type="primary" size="small" :loading="isaddLoading" @click="submitForm('addFormData')">确
+          定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -171,7 +157,7 @@ export default {
     this.getList()
   },
   methods: {
-    downFile(row){
+    downFile(row) {
       window.open(row.file, '_blank');
     },
 
@@ -264,6 +250,13 @@ export default {
           'pageNo': _.cloneDeep(this.tbParam.currentPage),
           'pageSize': this.tbParam.pageSize
         },
+        "sorts": [
+          {
+            "index": 0,
+            "property": "create_time",
+            "direction": "desc"
+          }
+        ]
       }
       for (var key in this.searchForm) {
         if (this.searchForm[key]) {
@@ -327,8 +320,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
-</style>
+<style lang="scss"></style>
 <style lang="scss" scoped>
 .tab_main_content {
   padding: 25px;

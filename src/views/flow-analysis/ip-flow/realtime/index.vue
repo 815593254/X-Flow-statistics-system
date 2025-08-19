@@ -49,7 +49,7 @@
         </el-card>
 
         <!-- 实时流量图表 -->
-        <el-card style="margin-top: 10px;">
+        <el-card style="margin-top: 10px;" v-loading="loading" element-loading-text="加载中..." element-loading-spinner="el-icon-loading">
             <el-row :gutter="20">
                 <el-col :span="24">
                     <div class="chart-wrapper">
@@ -96,9 +96,26 @@ export default {
         }
     },
     mounted() {
+        // 检查路由参数中是否有IP
+        if (this.$route.query.ip) {
+            this.queryForm.ip = this.$route.query.ip
+            this.queryParams.ip = this.$route.query.ip
+        }
+        
         this.initChart()
         this.loadInitialData()
         this.startAutoUpdate()
+    },
+    watch: {
+        // 监听路由变化，更新IP参数
+        '$route'(to, from) {
+            if (to.query.ip && to.query.ip !== this.queryParams.ip) {
+                this.queryForm.ip = to.query.ip
+                this.queryParams.ip = to.query.ip
+                // 如果IP改变了，重新加载数据
+                this.loadInitialData()
+            }
+        }
     },
     beforeDestroy() {
         this.stopAutoUpdate()
@@ -214,10 +231,10 @@ export default {
         // 加载初始数据（5分钟前到现在）
         async loadInitialData() {
             // 如果没有输入IP地址，不进行查询
-            if (!this.queryParams.ip) {
-                // this.$message.warning('请输入IP地址进行查询')
-                return
-            }
+            // if (!this.queryParams.ip) {
+            //     // this.$message.warning('请输入IP地址进行查询')
+            //     return
+            // }
 
             const endTime = Date.now()
             const startTime = endTime - 5 * 60 * 1000 // 5分钟前

@@ -50,7 +50,7 @@
         </el-card>
 
         <!-- 实时流量图表 -->
-        <el-card style="margin-top: 10px;">
+        <el-card style="margin-top: 10px;" v-loading="loading" element-loading-text="加载中..." element-loading-spinner="el-icon-loading">
             <el-row :gutter="20">
                 <el-col :span="24">
                     <div class="chart-wrapper">
@@ -80,11 +80,11 @@ export default {
             timer: null, // 定时器
             chart: null,
             queryForm: {
-                hostName: '',
+                hostName: 'localhost.localdomain',
                 interfaceName: ''
             },
             queryParams: {
-                hostName: '',
+                hostName: 'localhost.localdomain',
                 interfaceName: ''
             },
             chartData: {

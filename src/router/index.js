@@ -54,17 +54,10 @@ export const constantRoutes = [
   {
     path: '/',
     component: Layout,
-    redirect: '/index',
+    redirect: '/flow-analysis',
     disabled: false,
-    meta: { title: '首页', icon: 'el-icon-s-home' },
-    children: [
-      {
-        path: 'index',
-        component: resolve => require(['@/views/index'], resolve),
-        name: 'Index',
-        meta: { title: '首页', icon: 'el-icon-s-home' }
-      },
-    ],
+    hidden: true,
+    meta: {  },
   },
   {
     path: '/update-password',

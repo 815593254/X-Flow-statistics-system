@@ -2,6 +2,7 @@
   <div class="app-container">
     <div class="tab-container">
       <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+        <el-tab-pane label="Top20 流量" name="top20"></el-tab-pane>
         <el-tab-pane label="实时流量" name="realtime"></el-tab-pane>
         <el-tab-pane label="历史流量" name="history"></el-tab-pane>
       </el-tabs>
@@ -15,7 +16,7 @@ export default {
   name: 'IpFlow',
   data() {
     return {
-      activeTab: 'realtime'
+      activeTab: 'top20'
     }
   },
   mounted() {
@@ -23,11 +24,18 @@ export default {
   },
   methods: {
     handleTabClick(tab) {
-      this.$router.push(`/flow-analysis/ip-flow/${tab.name}`)
+      // 保持当前的query参数，特别是IP参数
+      const currentQuery = { ...this.$route.query }
+      this.$router.push({
+        path: `/flow-analysis/ip-flow/${tab.name}`,
+        query: currentQuery
+      })
     },
     setActiveTab() {
       const path = this.$route.path
-      if (path.includes('realtime')) {
+      if (path.includes('top20')) {
+        this.activeTab = 'top20'
+      } else if (path.includes('realtime')) {
         this.activeTab = 'realtime'
       } else if (path.includes('history')) {
         this.activeTab = 'history'

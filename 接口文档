@@ -244,3 +244,112 @@ method：POST
         "firstPage": true
     }
 }
+
+
+
+
+
+### 实时TOP20流量查询
+1、实时TOP20流量查询请求(最高返回20条 按rate_bps排序)
+url：/api/v1/dsoc/report/flow/rtdb/top
+method：POST
+参数无：
+返回：
+{
+    "code": "000000",
+    "message": "操作成功",
+    "body": {
+        "cClass20": [
+            {
+                "ip": "42.157.199.0/24",
+                "rate_bps": 915288.0,
+                "ts_ms": 1753934153090
+            },
+			......
+        ],
+        "ipTop20": [
+            {
+                "ip": "42.157.192.61",
+                "rate_bps": 528480.0,
+                "ts_ms": 1753934150099
+            },
+			......
+        ]
+    }
+}
+
+### 阈值查询及修改
+1、阈值查询
+url:/api/v1/dsoc/system/config/get
+method：POST
+参数：
+{
+    "systemConfKey":"DSOC_SYSTEM_CONF_WARNING_THRESHOLD"
+}
+返回：
+{
+    "code": "000000",
+    "message": "操作成功",
+    "body": {
+        "systemConfId": "31",
+        "systemConfKey": "DSOC_SYSTEM_CONF_WARNING_THRESHOLD",
+        "systemConfKeyIn": null,
+        "systemConfValue": "500001",
+        "systemConfDesc": "阈值告警(单位bps)",
+        "systemConfState": 1,
+        "createTime": 1755130386000
+    }
+}
+
+2、阈值修改
+url:/api/v1/dsoc/system/config/update
+method：POST
+参数：
+{
+    "systemConfKey":"DSOC_SYSTEM_CONF_WARNING_THRESHOLD",
+    "systemConfValue":"500001"
+}
+返回：
+{
+    "code": "000000",
+    "message": "操作成功",
+    "body": true
+}
+
+
+
+
+### 查询时间范围内同一C段TOP IP排行 并展示
+1、查询时间范围内同一C段TOP IP排行(最高返回20条 按rate_bps排序)
+url：/api/v1/dsoc/report/flow/cclass/ip/top
+method：POST
+参数参考：
+{
+    "ip": "42.157.193.0/24",
+    "condition": {
+        "begin": 1755486677527,
+        "end": 1755486977527
+    },
+    "page": {
+        "pageSize": 0
+    }
+}
+返回：
+{
+    "code": "000000",
+    "message": "操作成功",
+    "body": [
+        {
+            "page": null,
+            "sorts": null,
+            "ip": "42.157.193.125",
+            "ipLike": null,
+            "rate_bps": 1.9880512E7,
+            "ts_ms": 1755486660000,
+            "time": null,
+            "condition": null,
+            "avg_bps": 66268.37333333334,
+            "max_bps": 1.9880512E7
+        }
+        ......
+}

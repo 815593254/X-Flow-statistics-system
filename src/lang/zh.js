@@ -1,5 +1,5 @@
 export default {
-  wafTitle: '数据安全中心',
+  wafTitle: '流量分析系统',
   common: {
     ID: 'ID',
     index: '序号',
