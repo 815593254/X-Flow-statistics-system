@@ -70,13 +70,33 @@
         <el-card v-if="showCurrentCClass" style="margin-top: 10px;" v-loading="cClassRankLoading"
             element-loading-text="加载中..." element-loading-spinner="el-icon-loading">
             <div slot="header" class="card-header">
-                <span>{{ currentCClass }} 段内IP流量排名</span>
+                <span>段内IP流量排名</span>
                 <el-button type="text" @click="refreshCClassData" :loading="cclassLoading">
                     <i class="el-icon-refresh"></i>
                 </el-button>
             </div>
 
-            <el-row :gutter="20">
+            <div class="ranking-list">
+                <div v-for="(item, index) in a" :key="index" class="ranking-item">
+                    <div class="rank-number" :class="getCClassRankClass(index + 1)">
+                        #{{ index + 1 }}
+                    </div>
+                    <div class="ip-info">
+                        <div class="ip-address">{{ item.ip }}</div>
+                        <div class="flow-stats">
+                            <span class="current-flow">当前: {{ formatBytes(item.rate_bps) }}</span>
+                            <span class="avg-flow">平均: {{ formatBytes(item.avg_bps) }}</span>
+                            <span class="max-flow">峰值: {{ formatBytes(item.max_bps) }}</span>
+                        </div>
+                    </div>
+                    <!-- <div class="flow-rate">{{ formatBytes(item.rate_bps) }}</div> -->
+                </div>
+                <!-- <div class="timestamp">
+                        {{ parseTime(item.ts_ms, '{h}:{i}:{s}') }}
+                    </div> -->
+            </div>
+
+            <!-- <el-row :gutter="20">
                 <el-col :span="24">
                     <div class="cclass-ranking-list">
                         <div v-for="(item, index) in cclassIpList" :key="index" class="cclass-ranking-item"
@@ -102,7 +122,7 @@
                         该IP段暂无流量数据
                     </div>
                 </el-col>
-            </el-row>
+            </el-row> -->
         </el-card>
     </div>
 </template>
@@ -117,6 +137,7 @@ export default {
     data() {
         return {
             loading: false,
+            cClassRankLoading: false,
             timer: null, // 定时器
             chart: null,
             queryForm: {
@@ -137,6 +158,18 @@ export default {
             // IP段相关数据
             currentCClass: '', // 当前查看的IP段
             cclassIpList: [], // IP段内IP排名列表
+            a: [{
+                "page": null,
+                "sorts": null,
+                "ip": "42.157.193.125",
+                "ipLike": null,
+                "rate_bps": 1.9880512E7,
+                "ts_ms": 1755486660000,
+                "time": null,
+                "condition": null,
+                "avg_bps": 66268.37333333334,
+                "max_bps": 1.9880512E7
+            }],
             cclassLoading: false // IP段数据加载状态
         }
     },
@@ -487,7 +520,7 @@ export default {
                 const startTime = endTime - 5 * 60 * 1000
 
                 const data = {
-                    ip: this.currentCClass,
+                    ip: this.queryParams.ip,
                     condition: {
                         begin: startTime,
                         end: endTime
@@ -499,15 +532,16 @@ export default {
 
                 const response = await getCClassIpTop(data)
 
-                if (response.code === '000000' && response.body && response.body.results) {
-                    this.cClassRankData = response.body.results
+                if (response.code === '000000') {
+                    this.cclassIpList = response.body
+                    this.cClassRankLoading = false
                 } else {
-                    this.cClassRankData = []
+                    this.cclassIpList = []
                     console.warn('获取IP段排名数据失败:', response.msg)
                 }
             } catch (error) {
                 console.error('加载IP段排名数据失败:', error)
-                this.cClassRankData = []
+                this.cclassIpList = []
             } finally {
                 this.cClassRankLoading = false
             }
@@ -547,12 +581,13 @@ export default {
             if (index === 1) return 'rank-second'
             if (index === 2) return 'rank-third'
             return 'rank-normal'
-        }
+        },
+
     }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .realtime-flow-container {
     margin-top: 10px;
     padding: 0;
@@ -624,57 +659,85 @@ export default {
     border-bottom: none;
 }
 
+.ranking-list {
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+        background: #e9ecef;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
 .rank-number {
-    width: 40px;
+    min-width: 50px;
     height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 15px;
     font-weight: bold;
-    border-radius: 4px;
-    margin-right: 12px;
     font-size: 14px;
-}
+    margin-right: 12px;
 
-.rank-first .rank-number {
-    background: linear-gradient(135deg, #ffd700, #ffed4e);
-    color: #b8860b;
-}
+    &.rank-first {
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+        color: #8b5a00;
+    }
 
-.rank-second .rank-number {
-    background: linear-gradient(135deg, #c0c0c0, #e5e5e5);
-    color: #696969;
-}
+    &.rank-second {
+        background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+        color: #666;
+    }
 
-.rank-third .rank-number {
-    background: linear-gradient(135deg, #cd7f32, #daa520);
-    color: #8b4513;
-}
+    &.rank-third {
+        background: linear-gradient(135deg, #cd7f32, #daa560);
+        color: #fff;
+    }
 
-.rank-normal .rank-number {
-    background: #f5f7fa;
-    color: #909399;
+    &.rank-normal {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
 }
 
 .ip-info {
     flex: 1;
-    min-width: 0;
+
+    .flow-stats {
+        margin-top: 8px;
+        display: flex;
+        gap: 25px;
+    }
+
+    .ip-address {
+        font-size: 14px;
+        font-weight: 500;
+        color: #303133;
+        margin-bottom: 4px;
+    }
+
+    .flow-rate {
+        font-size: 16px;
+        font-weight: bold;
+        color: #67c23a;
+    }
 }
 
-.ip-address {
-    font-size: 14px;
-    font-weight: 500;
-    color: #409eff;
-    margin-bottom: 4px;
-    word-break: break-all;
-}
-
-.flow-stats {
-    display: flex;
-    gap: 12px;
-    font-size: 12px;
-    color: #909399;
-}
 
 .current-flow {
     color: #e6a23c;
@@ -728,25 +791,3 @@ export default {
     }
 }
 </style>
-
-.status-value {
-font-size: 24px;
-font-weight: bold;
-color: #409eff;
-margin-bottom: 5px;
-}
-
-.status-label {
-font-size: 14px;
-color: #666;
-}
-
-.charts-container {
-margin-bottom: 20px;
-}
-
-.chart-wrapper {
-background: #fff;
-border-radius: 4px;
-padding: 20px;
-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
