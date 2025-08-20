@@ -1,7 +1,7 @@
 <template>
     <div class="realtime-flow-container">
         <!-- 筛选条件 -->
-        <el-card >
+        <el-card>
             <!-- <div class="filter-container"> -->
             <el-row :gutter="20">
                 <el-col :span="6">
@@ -49,7 +49,8 @@
         </el-card>
 
         <!-- 实时流量图表 -->
-        <el-card style="margin-top: 10px;" v-loading="loading" element-loading-text="加载中..." element-loading-spinner="el-icon-loading">
+        <el-card style="margin-top: 10px;" v-loading="loading" element-loading-text="加载中..."
+            element-loading-spinner="el-icon-loading">
             <el-row :gutter="20">
                 <el-col :span="24">
                     <div class="chart-wrapper">
@@ -65,24 +66,21 @@
             </el-row>
         </el-card>
 
-        <!-- C段IP排名列表 -->
-        <el-card v-if="currentCClass" style="margin-top: 10px;" v-loading="cClassRankLoading" element-loading-text="加载中..." element-loading-spinner="el-icon-loading">
+        <!-- IP段IP排名列表 -->
+        <el-card v-if="showCurrentCClass" style="margin-top: 10px;" v-loading="cClassRankLoading"
+            element-loading-text="加载中..." element-loading-spinner="el-icon-loading">
             <div slot="header" class="card-header">
-                <span>{{ currentCClass }} C段内IP流量排名</span>
+                <span>{{ currentCClass }} 段内IP流量排名</span>
                 <el-button type="text" @click="refreshCClassData" :loading="cclassLoading">
                     <i class="el-icon-refresh"></i>
                 </el-button>
             </div>
-            
+
             <el-row :gutter="20">
                 <el-col :span="24">
                     <div class="cclass-ranking-list">
-                        <div 
-                            v-for="(item, index) in cclassIpList" 
-                            :key="index"
-                            class="cclass-ranking-item"
-                            @click="switchToIp(item.ip)"
-                        >
+                        <div v-for="(item, index) in cclassIpList" :key="index" class="cclass-ranking-item"
+                            @click="switchToIp(item.ip)">
                             <div class="rank-number" :class="getCClassRankClass(index + 1)">
                                 #{{ index + 1 }}
                             </div>
@@ -99,9 +97,9 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div v-if="cclassIpList.length === 0 && !cclassLoading" class="no-data">
-                        该C段暂无流量数据
+                        该IP段暂无流量数据
                     </div>
                 </el-col>
             </el-row>
@@ -136,33 +134,31 @@ export default {
             maxRateBps: 0, // 5分钟内的峰值
             avgRateBps5Min: 0, // 5分钟内的平均流量
             lastUpdateTime: '',
-            // C段相关数据
-            currentCClass: '', // 当前查看的C段
-            cclassIpList: [], // C段内IP排名列表
-            cclassLoading: false // C段数据加载状态
+            // IP段相关数据
+            currentCClass: '', // 当前查看的IP段
+            cclassIpList: [], // IP段内IP排名列表
+            cclassLoading: false // IP段数据加载状态
         }
     },
     mounted() {
-        // 检查路由参数中是否有IP或C段
+        // 检查路由参数中是否有IP或IP段
         if (this.$route.query.ip) {
             this.queryForm.ip = this.$route.query.ip
             this.queryParams.ip = this.$route.query.ip
         }
-        
+
         if (this.$route.query.cclass) {
             this.currentCClass = this.$route.query.cclass
-            // 如果是C段，也设置到IP查询框中（去掉/24后缀）
-            const baseIp = this.$route.query.cclass.split('/')[0]
-            this.queryForm.ip = baseIp
-            this.queryParams.ip = baseIp
+            this.queryForm.ip = this.$route.query.cclass
+            this.queryParams.ip = this.$route.query.cclass
         }
-        
+
         this.initChart()
         this.loadInitialData()
         this.startAutoUpdate()
-        
-        // 如果有C段参数，加载C段IP排名
-        if (this.currentCClass) {
+
+        // 如果有IP段参数，加载IP段IP排名
+        if (this.currentCClass.indexOf('/') !== -1) {
             this.loadCClassData()
         }
     },
@@ -172,22 +168,27 @@ export default {
             if (to.query.ip && to.query.ip !== this.queryParams.ip) {
                 this.queryForm.ip = to.query.ip
                 this.queryParams.ip = to.query.ip
-                this.currentCClass = '' // 清除C段状态
-                this.cclassIpList = [] // 清除C段列表
+                this.currentCClass = '' // 清除IP段状态
+                this.cclassIpList = [] // 清除IP段列表
                 // 如果IP改变了，重新加载数据
                 this.loadInitialData()
             }
-            
+
             if (to.query.cclass && to.query.cclass !== this.currentCClass) {
                 this.currentCClass = to.query.cclass
-                // 如果是C段，设置基础IP到查询框
-                const baseIp = to.query.cclass.split('/')[0]
+                // 如果是IP段，设置基础IP到查询框
+                const baseIp = to.query.cclass
                 this.queryForm.ip = baseIp
                 this.queryParams.ip = baseIp
                 // 重新加载数据
                 this.loadInitialData()
                 this.loadCClassData()
             }
+        }
+    },
+    computed: {
+        showCurrentCClass() {
+            return this.queryParams.ip.indexOf('/') !== -1
         }
     },
     beforeDestroy() {
@@ -304,16 +305,16 @@ export default {
         // 加载初始数据（5分钟前到现在）
         async loadInitialData() {
             // 如果没有输入IP地址，不进行查询
-            // if (!this.queryParams.ip) {
-            //     // this.$message.warning('请输入IP地址进行查询')
-            //     return
-            // }
+            if (!this.queryParams.ip) {
+                // this.$message.warning('请输入IP地址进行查询')
+                return
+            }
 
             const endTime = Date.now()
             const startTime = endTime - 5 * 60 * 1000 // 5分钟前
 
             try {
-                this.loading = true
+                // this.loading = true
                 const data = {
                     ip: this.queryParams.ip, // IP是必填参数
                     condition: {
@@ -330,7 +331,7 @@ export default {
                 if (response.code === '000000' && response.body.results) {
                     this.processInitialData(response.body.results)
                     this.updateChart()
-                    
+
                 } else {
                     this.$message.error('获取数据失败')
                 }
@@ -338,7 +339,7 @@ export default {
                 console.error('加载初始数据失败:', error)
                 this.$message.error('加载初始数据失败')
             } finally {
-                this.loading = false
+                // this.loading = false
             }
         },
 
@@ -354,7 +355,7 @@ export default {
                 this.chartData.timeData.push(item.ts_ms)
                 this.chartData.rateBpsData.push(item.rate_bps || 0)
                 this.chartData.avgBpsData.push(item.avg_bps || 0)
-                
+
                 totalRateBps += (item.rate_bps || 0) // 累加用于计算平均值
             })
 
@@ -395,6 +396,7 @@ export default {
             this.queryParams.ip = this.queryForm.ip
             this.stopAutoUpdate()
             this.loadInitialData()
+            this.loadCClassData()
             this.startAutoUpdate()
         },
 
@@ -402,8 +404,9 @@ export default {
         startAutoUpdate() {
             this.stopAutoUpdate() // 先清理已有的定时器
             this.timer = setInterval(() => {
+                this.loadCClassData()
                 this.loadInitialData()
-            }, 10000) // 每秒更新一次
+            }, 10000) // 每10秒更新一次
         },
 
         // 停止自动更新
@@ -449,14 +452,14 @@ export default {
             if (!timestamp || isNaN(timestamp)) {
                 return '--:--:--'
             }
-            
+
             const date = new Date(parseInt(timestamp))
-            
+
             // 检查日期是否有效
             if (isNaN(date.getTime())) {
                 return '--:--:--'
             }
-            
+
             const year = date.getFullYear()
             const month = String(date.getMonth() + 1).padStart(2, '0')
             const day = String(date.getDate()).padStart(2, '0')
@@ -470,15 +473,15 @@ export default {
             return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
         },
 
-        // C段排名相关方法
+        // IP段排名相关方法
         async loadCClassData() {
-            if (!this.currentCClass) {
+            if (!this.showCurrentCClass) {
                 return
             }
 
             try {
                 this.cClassRankLoading = true
-                
+
                 // 构建时间范围，获取最近5分钟的数据
                 const endTime = Date.now()
                 const startTime = endTime - 5 * 60 * 1000
@@ -495,37 +498,37 @@ export default {
                 }
 
                 const response = await getCClassIpTop(data)
-                
+
                 if (response.code === '000000' && response.body && response.body.results) {
                     this.cClassRankData = response.body.results
                 } else {
                     this.cClassRankData = []
-                    console.warn('获取C段排名数据失败:', response.msg)
+                    console.warn('获取IP段排名数据失败:', response.msg)
                 }
             } catch (error) {
-                console.error('加载C段排名数据失败:', error)
+                console.error('加载IP段排名数据失败:', error)
                 this.cClassRankData = []
             } finally {
                 this.cClassRankLoading = false
             }
         },
 
-        // 刷新C段排名数据
+        // 刷新IP段排名数据
         refreshCClassData() {
             if (this.cClassRankTimer) {
                 clearInterval(this.cClassRankTimer)
             }
-            
+
             if (this.currentCClass) {
                 this.loadCClassData()
-                // 每30秒刷新一次C段排名
+                // 每30秒刷新一次IP段排名
                 this.cClassRankTimer = setInterval(() => {
                     this.loadCClassData()
                 }, 30000)
             }
         },
 
-        // 点击C段排名中的IP，切换到该IP的流量查看
+        // 点击IP段排名中的IP，切换到该IP的流量查看
         switchToIp(ip) {
             // 更新路由参数，切换到新的IP
             this.$router.push({
@@ -533,7 +536,7 @@ export default {
                 query: {
                     ...this.$route.query,
                     ip: ip,
-                    cclass: '' // 清除C段参数，显示单个IP的流量
+                    cclass: '' // 清除IP段参数，显示单个IP的流量
                 }
             })
         },
@@ -575,7 +578,7 @@ export default {
     /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
 }
 
-/* C段排名相关样式 */
+/* IP段排名相关样式 */
 .cclass-rank-container {
     background: #fff;
     border-radius: 4px;
@@ -710,14 +713,14 @@ export default {
     .cclass-rank-item {
         flex-wrap: wrap;
     }
-    
+
     .flow-stats {
         flex-direction: column;
         gap: 4px;
         width: 100%;
         margin-top: 8px;
     }
-    
+
     .update-time {
         width: 100%;
         text-align: left;
@@ -727,23 +730,23 @@ export default {
 </style>
 
 .status-value {
-    font-size: 24px;
-    font-weight: bold;
-    color: #409eff;
-    margin-bottom: 5px;
+font-size: 24px;
+font-weight: bold;
+color: #409eff;
+margin-bottom: 5px;
 }
 
 .status-label {
-    font-size: 14px;
-    color: #666;
+font-size: 14px;
+color: #666;
 }
 
 .charts-container {
-    margin-bottom: 20px;
+margin-bottom: 20px;
 }
 
 .chart-wrapper {
-    background: #fff;
-    border-radius: 4px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+background: #fff;
+border-radius: 4px;
+padding: 20px;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

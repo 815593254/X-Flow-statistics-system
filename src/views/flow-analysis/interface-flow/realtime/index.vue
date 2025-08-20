@@ -228,7 +228,7 @@ export default {
             const startTime = endTime - 5 * 60 * 1000 // 5分钟前
 
             try {
-                this.loading = true
+                // this.loading = true
                 const data = {
                     condition: {
                         begin: startTime,
@@ -259,7 +259,7 @@ export default {
                 console.error('加载初始数据失败:', error)
                 this.$message.error('加载初始数据失败')
             } finally {
-                this.loading = false
+                // this.loading = false
             }
         },
 
@@ -313,7 +313,7 @@ export default {
             this.stopAutoUpdate() // 先清理已有的定时器
             this.timer = setInterval(() => {
                 this.loadInitialData()
-            }, 1000) // 每秒更新一次
+            }, 10000) // 每10秒更新一次
         },
 
         // 停止自动更新

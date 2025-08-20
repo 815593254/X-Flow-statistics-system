@@ -5,7 +5,7 @@
         <el-col :span="8">
           <el-date-picker v-model="queryParams.dateRange" type="datetimerange" range-separator="至"
             start-placeholder="开始日期" end-placeholder="结束日期" format="yyyy-MM-dd HH:mm:ss"
-            value-format="yyyy-MM-dd HH:mm:ss" :picker-options="pickerOptions" @change="handleQuery"/>
+            value-format="yyyy-MM-dd HH:mm:ss" :picker-options="pickerOptions" @change="handleQuery" />
         </el-col>
 
         <el-col :span="6">
@@ -58,7 +58,8 @@
       </el-row>
     </el-card>
 
-    <el-card style="margin-top: 10px;" v-loading="loading" element-loading-text="加载中..." element-loading-spinner="el-icon-loading">
+    <el-card style="margin-top: 10px;" v-loading="loading" element-loading-text="加载中..."
+      element-loading-spinner="el-icon-loading">
       <el-row :gutter="20">
         <el-col :span="24">
           <div class="chart-wrapper">
@@ -106,11 +107,16 @@ export default {
     }
   },
   mounted() {
-    // 检查路由参数中是否有IP
+    // 检查路由参数中是否有IP或C段
     if (this.$route.query.ip) {
       this.queryParams.ip = this.$route.query.ip
     }
-    
+
+    if (this.$route.query.cclass) {
+      this.queryParams.ip = this.$route.query.cclass
+    }
+
+
     // 设置默认时间范围为最近24小时
     this.setDefaultTimeRange()
     this.initCharts()
@@ -155,6 +161,9 @@ export default {
 
     // 加载数据
     async loadData() {
+      if (!this.queryParams.ip) {
+        return
+      }
 
       if (!this.queryParams.dateRange || this.queryParams.dateRange.length !== 2) {
         this.$message.warning('请选择时间范围')
@@ -438,14 +447,14 @@ export default {
       if (!timestamp || isNaN(timestamp)) {
         return '--:--:--'
       }
-      
+
       const date = new Date(parseInt(timestamp))
-      
+
       // 检查日期是否有效
       if (isNaN(date.getTime())) {
         return '--:--:--'
       }
-      
+
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
