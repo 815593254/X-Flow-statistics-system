@@ -77,7 +77,7 @@
             </div>
 
             <div class="ranking-list">
-                <div v-for="(item, index) in a" :key="index" class="ranking-item">
+                <div v-for="(item, index) in cclassIpList" :key="index" class="ranking-item">
                     <div class="rank-number" :class="getCClassRankClass(index + 1)">
                         #{{ index + 1 }}
                     </div>
@@ -89,40 +89,12 @@
                             <span class="max-flow">峰值: {{ formatBytes(item.max_bps) }}</span>
                         </div>
                     </div>
-                    <!-- <div class="flow-rate">{{ formatBytes(item.rate_bps) }}</div> -->
                 </div>
                 <!-- <div class="timestamp">
                         {{ parseTime(item.ts_ms, '{h}:{i}:{s}') }}
                     </div> -->
             </div>
 
-            <!-- <el-row :gutter="20">
-                <el-col :span="24">
-                    <div class="cclass-ranking-list">
-                        <div v-for="(item, index) in cclassIpList" :key="index" class="cclass-ranking-item"
-                            @click="switchToIp(item.ip)">
-                            <div class="rank-number" :class="getCClassRankClass(index + 1)">
-                                #{{ index + 1 }}
-                            </div>
-                            <div class="ip-info">
-                                <div class="ip-address">{{ item.ip }}</div>
-                                <div class="flow-stats">
-                                    <span class="current-flow">当前: {{ formatBytes(item.rate_bps) }}</span>
-                                    <span class="avg-flow">平均: {{ formatBytes(item.avg_bps) }}</span>
-                                    <span class="max-flow">峰值: {{ formatBytes(item.max_bps) }}</span>
-                                </div>
-                            </div>
-                            <div class="timestamp">
-                                {{ formatTime(item.ts_ms, 'HH:mm:ss') }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-if="cclassIpList.length === 0 && !cclassLoading" class="no-data">
-                        该IP段暂无流量数据
-                    </div>
-                </el-col>
-            </el-row> -->
         </el-card>
     </div>
 </template>
@@ -158,18 +130,6 @@ export default {
             // IP段相关数据
             currentCClass: '', // 当前查看的IP段
             cclassIpList: [], // IP段内IP排名列表
-            a: [{
-                "page": null,
-                "sorts": null,
-                "ip": "42.157.193.125",
-                "ipLike": null,
-                "rate_bps": 1.9880512E7,
-                "ts_ms": 1755486660000,
-                "time": null,
-                "condition": null,
-                "avg_bps": 66268.37333333334,
-                "max_bps": 1.9880512E7
-            }],
             cclassLoading: false // IP段数据加载状态
         }
     },
